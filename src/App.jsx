@@ -9,12 +9,13 @@ import {
 
 // --- 全局配置 ---
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyALK4TY5etUnEvBTqfvH6d0O36Rt3UuYIM",
+  authDomain: "hk-bank-tracker.firebaseapp.com",
+  projectId: "hk-bank-tracker",
+  storageBucket: "hk-bank-tracker.firebasestorage.app",
+  messagingSenderId: "631669349028",
+  appId: "1:631669349028:web:c417086999a022363ce431",
+  measurementId: "G-6KJ0LV7YRR"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -48,9 +49,9 @@ const INITIAL_BANKS = [
 const BankLogo = ({ bank }) => {
   const [error, setError] = useState(false);
   const logoUrl = `https://www.google.com/s2/favicons?sz=128&domain=${bank.domain}`;
-  if (error || !bank.domain) return <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg font-black text-slate-300">{bank.name.charAt(0)}</div>;
+  if (error || !bank.domain) return <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-lg font-black text-slate-300 shrink-0">{bank.name.charAt(0)}</div>;
   return (
-    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden p-1 shrink-0">
+    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden p-1 shrink-0 shadow-sm">
       <img src={logoUrl} alt={bank.name} className="w-full h-full object-contain" onError={() => setError(true)}/>
     </div>
   );
