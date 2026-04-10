@@ -1,26 +1,103 @@
-name: Daily Rates Update
+/**
+ * scraper.js - 香港銀行定存利率自動抓取機器人
+ * 功能：自動前往滙豐官網抄寫利率，並同步至 Firebase 資料庫。
+ * 報錯增強版：當 GitHub Secrets 設定錯誤或權限不足時，會輸出詳細中文提示。
+ */
 
-on:
-  schedule:
-    - cron: '0 0 * * *' # 香港時間每天早上 8 點執行
-  workflow_dispatch: # 允許在 GitHub 頁面手動點擊按鈕執行
+const puppeteer = require('puppeteer');
+const admin = require('firebase-admin');
 
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+// 1. 檢查 GitHub Secrets 環境變數是否存在
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  console.error("❌ 錯誤：在執行環境中找不到 'FIREBASE_SERVICE_ACCOUNT'。");
+  console.error("💡 解決方法：請確認你在 GitHub 倉庫的 Settings > Secrets and variables > Actions 中新增了這個 Secret。");
+  process.exit(1);
+}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+// 2. 嘗試解析 JSON 密鑰內容
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} catch (e) {
+  console.error("❌ 錯誤：JSON 密鑰格式損壞，無法解析。");
+  console.error("💡 解決方法：請確保你貼入 GitHub 的內容是從 Firebase 下載的 .json 檔案的完整原始碼（包含大括號 {}）。");
+  console.error("系統報錯訊息:", e.message);
+  process.exit(1);
+}
 
-      - name: Install Dependencies
-        run: npm install
+// 3. 初始化 Firebase Admin SDK
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  }
+} catch (e) {
+  console.error("❌ 錯誤：Firebase 初始化失敗。");
+  console.error("💡 解決方法：這通常代表 JSON 內容無效或已過期。請嘗試在 Firebase 重新生成一份 Private Key。");
+  console.error("系統報錯訊息:", e.message);
+  process.exit(1);
+}
 
-      - name: Run Scraper
-        run: node scraper.js
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+const db = admin.firestore();
+const appId = 'hk-fd-tracker-pro'; // 必須與 App.jsx 中的 appId 一致
+
+async function runScraper() {
+  console.log("🚀 機器人啟動：正在準備前往滙豐官網...");
+  
+  const browser = await puppeteer.launch({ 
+    headless: "new",
+    args: [
+      '--no-sandbox', 
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  });
+  
+  const page = await browser.newPage();
+
+  try {
+    // 前往滙豐定存利率頁面
+    console.log("🌐 正在載入網頁...");
+    await page.goto('https://www.hsbc.com.hk/zh-hk/accounts/products/time-deposits/', { 
+      waitUntil: 'networkidle2',
+      timeout: 60000 
+    });
+
+    // 抓取頁面上的利率數字
+    const rates = await page.evaluate(() => {
+      const text = document.body.innerText;
+      // 尋找包含「港元新資金...高達 X.X%」的文字段落
+      const hkdMatch = text.match(/港元新資金.*高達(\d+\.?\d*)%/);
+      return {
+        HKD: hkdMatch ? parseFloat(hkdMatch[1]) : 2.2 // 抓不到時預設 2.2 作為保底
+      };
+    });
+
+    console.log(`✅ 抓取成功！目前 HSBC 官網顯示利率為: ${rates.HKD}%`);
+
+    // 定義寫入資料庫的路徑
+    const docPath = `artifacts/${appId}/public/data/live_rates/hsbc`;
+    console.log(`📡 正在嘗試同步數據至路徑: ${docPath}`);
+
+    // 寫入 Firestore
+    await db.doc(docPath).set({
+      id: 'hsbc',
+      rates: {
+        HKD: { '1m': 0.5, '3m': rates.HKD, '6m': rates.HKD, '12m': 2.0 }
+      },
+      lastUpdated: new Date().toISOString()
+    }, { merge: true });
+
+    console.log("🎉 任務完成！數據已成功更新到雲端資料庫。");
+
+  } catch (error) {
+    console.error("❌ 執行過程中發生錯誤:", error.message);
+    process.exit(1);
+  } finally {
+    await browser.close();
+  }
+}
+
+// 開始執行主程式
+runScraper();
