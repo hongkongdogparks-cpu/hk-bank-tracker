@@ -31,3 +31,16 @@
     "vite": "^8.0.4"
   }
 }
+
+{
+  "name": "hk-rates-scraper",
+  "version": "1.0.0",
+  "description": "Automated scraper for HK bank rates",
+  "main": "scraper.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.1",
+    "puppeteer": "^21.4.1"
+  }
+}
+
+
