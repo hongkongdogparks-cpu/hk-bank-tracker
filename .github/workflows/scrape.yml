@@ -16,9 +16,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm' # 自動開啟快取功能，大幅提升下次安裝速度
 
       - name: Install Dependencies
-        run: npm install puppeteer firebase-admin
+        # 使用 npm ci 比 npm install 更快更穩定，適合自動化環境
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install puppeteer firebase-admin
+          fi
 
       - name: Run Scraper
         run: node scraper.js
