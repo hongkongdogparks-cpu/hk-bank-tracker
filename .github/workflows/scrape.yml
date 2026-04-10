@@ -8,6 +8,8 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
+    # 設定超時時間，防止機器人無限期卡住（例如網路問題）
+    timeout-minutes: 15 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -16,16 +18,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm' # 自動開啟快取功能，大幅提升下次安裝速度
+          cache: 'npm'
 
-      - name: Install Dependencies
-        # 使用 npm ci 比 npm install 更快更穩定，適合自動化環境
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install puppeteer firebase-admin
-          fi
+      - name: Install Scraper Dependencies
+        # 💡 精簡優化：不要安裝整個專案，只安裝爬蟲需要的兩個核心工具
+        # 這會比之前的 npm install 快上數倍
+        run: npm install puppeteer firebase-admin
 
       - name: Run Scraper
         run: node scraper.js
