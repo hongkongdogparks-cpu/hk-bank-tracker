@@ -2,11 +2,11 @@ import puppeteer from 'puppeteer-core';
 import admin from 'firebase-admin';
 
 /**
- * scraper.js - 專業級精準抓取版 (修復數據未更新問題)
+ * scraper.js - 專業級精準抓取版 (2026 穩定優化版)
  * 💡 修復核心：
- * 1. 日誌透明：在 Actions Log 中印出匹配過程，方便排查。
- * 2. 錨點定位：優先尋找「港元」表格標題，防止抓到頁面底部的美元表。
- * 3. 容錯處理：如果抓取到的數字異常（如 0 或過高），會發出警告。
+ * 1. 延遲加載：增加等待時間，確保 JavaScript 渲染的利率表完全出現。
+ * 2. 嚴格隔離：強制要求數字附近必須緊貼「港元/HKD」關鍵字，解決誤抓 USD 問題。
+ * 3. 診斷日誌：輸出更多調試信息到 GitHub Actions。
  */
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -19,14 +19,15 @@ if (!admin.apps.length) {
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 }
 const db = admin.firestore();
-const appId = 'hk-fd-tracker-pro'; // 💡 請確保此 ID 與 App.jsx 中的一致
+const appId = 'hk-fd-tracker-pro'; 
 
 async function scrapeBank(browser, task) {
   const page = await browser.newPage();
   
+  // 禁止載入媒體資源以加速
   await page.setRequestInterception(true);
   page.on('request', (req) => {
-    if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
+    if (['image', 'font', 'media'].includes(req.resourceType())) {
       req.abort();
     } else {
       req.continue();
@@ -36,35 +37,43 @@ async function scrapeBank(browser, task) {
   try {
     console.log(`----------------------------------------`);
     console.log(`🔍 正在檢查銀行: ${task.bankName}`);
-    await page.goto(task.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    const fullText = await page.evaluate(() => document.body.innerText);
-
-    // 💡 幣種隔離邏輯
-    const hkdAnchor = "港元";
-    const usdAnchor = "美元";
-    const hkdIndex = fullText.indexOf(hkdAnchor);
-    const usdIndex = fullText.indexOf(usdAnchor);
     
+    // 💡 增加等待時間至 networkidle2 並額外等待，確保動態表格加載
+    await page.goto(task.url, { waitUntil: 'networkidle2', timeout: 45000 });
+    await new Promise(r => setTimeout(r, 3000)); 
+
+    const fullText = await page.evaluate(() => document.body.innerText);
+    console.log(`ℹ️ 頁面原始文字長度: ${fullText.length}`);
+
+    // 💡 幣種區域精確切片 (HSBC 專用優化)
     let targetText = fullText;
+    const hkdIndex = fullText.indexOf('港元');
+    const usdIndex = fullText.indexOf('美元');
+    
     if (hkdIndex !== -1) {
-      // 只保留從「港元」關鍵字開始後 4000 個字元的範圍
-      const endLimit = (usdIndex > hkdIndex) ? usdIndex : hkdIndex + 4000;
-      targetText = fullText.substring(hkdIndex, endLimit);
-      console.log(`📌 已定位港元區域 (長度: ${targetText.length})`);
-    } else {
-      console.warn(`⚠️ 找不到「港元」關鍵字，正在使用全網頁抓取。`);
+      const endPos = (usdIndex > hkdIndex) ? usdIndex : hkdIndex + 5000;
+      targetText = fullText.substring(hkdIndex, endPos);
+      console.log(`📌 已鎖定港元利率區塊 (長度: ${targetText.length})`);
     }
 
     const updates = [];
     for (const item of task.mapping) {
       const extract = (tenor) => {
-        // 嚴格匹配：帳戶等級 -> 存期 -> 數字%
-        const regex = new RegExp(`${item.tier}[\\s\\S]{1,500}${tenor}[\\s\\S]{1,50}(\\d+\\.?\\d*)%`, 'i');
+        /**
+         * 💡 精準正則邏輯：
+         * 1. 找到帳戶等級 (tier)
+         * 2. 在之後的 1000 字內找到存期 (tenor)
+         * 3. 關鍵：在數字之前的 20 字內必須出現 港元/HKD
+         * 4. 排除 3.4% 以上的美元利率
+         */
+        const regex = new RegExp(`${item.tier}[\\s\\S]{1,1000}${tenor}[\\s\\S]{1,100}(港元|HKD)[\\s\\S]{1,20}(\\d+\\.?\\d*)%`, 'i');
         const match = targetText.match(regex);
+        
         if (match) {
-          const val = parseFloat(match[1]);
-          // 額外檢查：如果抓到大於 10 的數字，通常是抓錯（如美金 4.x 或其他數字）
-          return val < 10 ? val : null;
+          const val = parseFloat(match[2]);
+          // 匯豐港元 3M 應在 2.0-2.5 之間，若抓到 3.0 以上則極大可能是美元
+          if (task.bankName === 'HSBC' && val > 3.0) return null;
+          return val;
         }
         return null;
       };
@@ -77,8 +86,7 @@ async function scrapeBank(browser, task) {
       };
 
       if (rates['3m'] || rates['6m']) {
-        console.log(`✅ [${item.id}] 數據更新成功: 3M=${rates['3m']}% | 6M=${rates['6m']}%`);
-        
+        console.log(`✅ [${item.id}] 匹配成功! 3M=${rates['3m']}% | 6M=${rates['6m']}%`);
         updates.push(
           db.doc(`artifacts/${appId}/public/data/live_rates/${item.id}`).set({
             id: item.id,
@@ -87,12 +95,12 @@ async function scrapeBank(browser, task) {
           }, { merge: true })
         );
       } else {
-        console.warn(`❌ [${item.id}] 無法從網頁提取 ${item.tier} 的港元利率數字。`);
+        console.warn(`❌ [${item.id}] 未能提取港元利率 (可能因貨幣過濾或查無數據)`);
       }
     }
     await Promise.all(updates);
   } catch (err) {
-    console.error(`⚠️ ${task.bankName} 執行失敗: ${err.message}`);
+    console.error(`⚠️ ${task.bankName} 抓取出錯: ${err.message}`);
   } finally {
     await page.close();
   }
@@ -141,13 +149,13 @@ async function runScraper() {
     }
   ];
 
-  // 每組執行 2 家銀行
+  // 並行執行
   for (let i = 0; i < tasks.length; i += 2) {
     const batch = tasks.slice(i, i + 2);
     await Promise.all(batch.map(task => scrapeBank(browser, task)));
   }
 
-  // 虛擬銀行數據
+  // 虛擬銀行靜態更新
   const vBanks = [
     { id: 'za', r: { '1m': 1.0, '3m': 4.0, '6m': 3.6, '12m': 3.2 } }, 
     { id: 'paob', r: { '3m': 3.8, '6m': 3.6, '12m': 3.0 } }
@@ -159,7 +167,7 @@ async function runScraper() {
   }
 
   await browser.close();
-  console.log("🎉 抓取程序執行完畢。請檢查追蹤器是否已更新！");
+  console.log("🎉 抓取程序執行完畢。請刷新追蹤器網頁查看正確數據。");
 }
 
 runScraper();
