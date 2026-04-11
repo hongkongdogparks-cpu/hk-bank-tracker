@@ -8,7 +8,7 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # 💡 環境隔離後，目標應在 3 分鐘內完成
+    timeout-minutes: 15 # 💡 渣打等網站載入較慢，放寬至 15 分鐘
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
     steps:
@@ -21,7 +21,7 @@ jobs:
           node-version: '24'
 
       - name: Run Scraper with Isolation
-        # 💡 核心修正：加入 npm pkg set type="module" 以支援 scraper.js 的 import 語法
+        # 💡 環境隔離：建立乾淨目錄，極速安裝，並設定為模組化模式
         run: |
           mkdir runner_env
           cd runner_env
