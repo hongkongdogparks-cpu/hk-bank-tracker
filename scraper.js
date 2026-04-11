@@ -1,31 +1,79 @@
-name: Daily Rates Update
+import puppeteer from 'puppeteer';
+import admin from 'firebase-admin';
 
-on:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+/**
+ * scraper.js - 香港銀行定存利率自動抓取機器人 (ESM 版本)
+ */
 
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    # 設定超時時間，防止機器人無限期卡住（例如網路問題）
-    timeout-minutes: 15 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  console.error("❌ 錯誤：找不到 FIREBASE_SERVICE_ACCOUNT 環境變數。");
+  process.exit(1);
+}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+let serviceAccount;
+try {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} catch (e) {
+  console.error("❌ 錯誤：JSON 密鑰格式損壞。");
+  process.exit(1);
+}
 
-      - name: Install Scraper Dependencies
-        # 💡 精簡優化：不要安裝整個專案，只安裝爬蟲需要的兩個核心工具
-        # 這會比之前的 npm install 快上數倍
-        run: npm install puppeteer firebase-admin
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+  }
+} catch (e) {
+  console.error("❌ 錯誤：Firebase 初始化失敗:", e.message);
+  process.exit(1);
+}
 
-      - name: Run Scraper
-        run: node scraper.js
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+const db = admin.firestore();
+const appId = 'hk-fd-tracker-pro';
+
+async function runScraper() {
+  console.log("🚀 機器人啟動 (ESM 模式)...");
+  
+  const browser = await puppeteer.launch({ 
+    headless: "new",
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  
+  const page = await browser.newPage();
+
+  try {
+    console.log("🌐 正在載入滙豐網頁...");
+    await page.goto('https://www.hsbc.com.hk/zh-hk/accounts/products/time-deposits/', { 
+      waitUntil: 'networkidle2',
+      timeout: 60000 
+    });
+
+    const rates = await page.evaluate(() => {
+      const text = document.body.innerText;
+      const hkdMatch = text.match(/港元新資金.*高達(\d+\.?\d*)%/);
+      return { HKD: hkdMatch ? parseFloat(hkdMatch[1]) : 2.2 };
+    });
+
+    console.log(`✅ 抓取成功！目前滙豐利率: ${rates.HKD}%`);
+
+    const docPath = `artifacts/${appId}/public/data/live_rates/hsbc`;
+    await db.doc(docPath).set({
+      id: 'hsbc',
+      rates: {
+        HKD: { '1m': 0.5, '3m': rates.HKD, '6m': rates.HKD, '12m': 2.0 }
+      },
+      lastUpdated: new Date().toISOString()
+    }, { merge: true });
+
+    console.log("🎉 數據已成功同步至資料庫！");
+
+  } catch (error) {
+    console.error("❌ 執行失敗:", error.message);
+    process.exit(1);
+  } finally {
+    await browser.close();
+  }
+}
+
+runScraper();
