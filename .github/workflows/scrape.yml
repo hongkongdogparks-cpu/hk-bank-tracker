@@ -2,35 +2,69 @@ name: Daily Rates Update
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 香港時間每天早上 08:00 (00:00 UTC) 執行
-  workflow_dispatch: # 允許手動點擊按鈕執行
+    - cron: '0 0 * * *'   # 08:00 HKT (00:00 UTC) daily
+  workflow_dispatch:        # Allow manual trigger from GitHub UI
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 15 # 💡 渣打等網站載入較慢，放寬至 15 分鐘
+    timeout-minutes: 20     # SC and HSBC can be slow; 20 min is safe headroom
+
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Install Google Chrome stable
+        # Use the official Google apt repo — more reliable than apt-get chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub \
+            | sudo gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] \
+            http://dl.google.com/linux/chrome/deb/ stable main" \
+            | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update -qq
+          sudo apt-get install -y google-chrome-stable
+          google-chrome-stable --version
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'   # LTS; more stable than 24 for puppeteer-core
 
-      - name: Run Scraper with Isolation
-        # 💡 環境隔離：建立乾淨目錄，極速安裝，並設定為模組化模式
+      - name: Install dependencies & run scraper
         run: |
-          mkdir runner_env
+          mkdir -p runner_env
           cd runner_env
           npm init -y
           npm pkg set type="module"
-          npm install puppeteer-core firebase-admin --no-audit --no-fund --prefer-offline
+          npm install puppeteer-core firebase-admin \
+            --no-audit --no-fund --prefer-offline --loglevel=error
           cp ../scraper.js .
           node scraper.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+
+      - name: Upload debug HTML on failure
+        # Only runs if the scraper step fails — useful for diagnosing DOM changes
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html-${{ github.run_id }}
+          path: runner_env/tmp/debug_*.html
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Upload debug HTML when DUMP_HTML requested
+        # Manually set DUMP_HTML=1 in a workflow_dispatch run to inspect pages
+        if: env.DUMP_HTML == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html-manual-${{ github.run_id }}
+          path: /tmp/debug_*.html
+          if-no-files-found: ignore
+          retention-days: 3
