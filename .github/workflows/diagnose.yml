@@ -46,6 +46,12 @@ jobs:
             { name: 'BOC',      url: 'https://www.bochk.com/zh/deposits/promotions/timedeposit.html' },
             { name: 'Citi',     url: 'https://www.citibank.com.hk/zh/banking/time-deposit.html' },
             { name: 'SC',       url: 'https://www.sc.com/hk/zh/save/time-deposits/' },
+            { name: 'paob',     url: 'https://www.paob.com.hk/tc/deposit.html' },
+            { name: 'ICBC',     url: 'https://www.icbcasia.com/hk/en/personal/latest-promotion/online-time-deposit.html' },
+            { name: 'livi',     url: 'https://www.livibank.com/zh_HK/rates.html' },
+            { name: 'welab',    url: 'https://www.welab.bank/zh/rates/' },
+            { name: 'airstar',  url: 'https://www.airstarbank.com/zh-hk/deposit.html' },
+            { name: 'fusion',   url: 'https://www.fusionbank.com/deposit.html?lang=tc' },
           ];
 
           async function diagnose(browser, bank) {
