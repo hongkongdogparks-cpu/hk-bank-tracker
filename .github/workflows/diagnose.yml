@@ -1,0 +1,51 @@
+name: Diagnose Bank Pages
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Google Chrome stable
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub \
+            | sudo gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] \
+            http://dl.google.com/linux/chrome/deb/ stable main" \
+            | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update -qq
+          sudo apt-get install -y google-chrome-stable
+          google-chrome-stable --version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          mkdir runner_env && cd runner_env
+          npm init -y
+          npm pkg set type="module"
+          npm install puppeteer-core --no-audit --no-fund --loglevel=error
+          cp ../diagnose.js .
+          node diagnose.js
+
+      - name: Upload diagnostic reports
+        if: always()   # Upload even if the step above partially fails
+        uses: actions/upload-artifact@v4
+        with:
+          name: bank-diagnostics-${{ github.run_id }}
+          path: /tmp/diag_*.txt
+          if-no-files-found: warn
+          retention-days: 7
