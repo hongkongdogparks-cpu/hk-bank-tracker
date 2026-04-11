@@ -21,11 +21,12 @@ jobs:
           node-version: '24'
 
       - name: Run Scraper with Isolation
-        # 💡 核心修正：在臨時目錄執行，完全隔離主專案的 package.json
+        # 💡 核心修正：加入 npm pkg set type="module" 以支援 scraper.js 的 import 語法
         run: |
           mkdir runner_env
           cd runner_env
           npm init -y
+          npm pkg set type="module"
           npm install puppeteer-core firebase-admin --no-audit --no-fund --prefer-offline
           cp ../scraper.js .
           node scraper.js
