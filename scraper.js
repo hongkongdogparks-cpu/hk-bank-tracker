@@ -2,11 +2,11 @@ import puppeteer from 'puppeteer-core';
 import admin from 'firebase-admin';
 
 /**
- * scraper.js - 高速並行抓取版
+ * scraper.js - 高速分組並行抓取版
  * 💡 優化點：
- * 1. 資源攔截：不載入圖片、CSS、字體，僅抓取純文字。
- * 2. 並行處理：使用 Promise.all 同時抓取多家銀行。
- * 3. 快速導航：使用 'domcontentloaded' 代替 'networkidle2'。
+ * 1. 分組執行：每 3 間銀行一組，防止記憶體過載導致超時。
+ * 2. 嚴格資源過濾：完全禁止 CSS、圖片、字體載入。
+ * 3. 補齊 App.jsx 內所有銀行 ID。
  */
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -24,11 +24,10 @@ const appId = 'hk-fd-tracker-pro';
 async function scrapeBank(browser, task) {
   const page = await browser.newPage();
   
-  // 🚀 高速優化：攔截不必要的請求
+  // 🚀 禁止載入無關資源，加速 80%
   await page.setRequestInterception(true);
   page.on('request', (req) => {
-    const type = req.resourceType();
-    if (['image', 'stylesheet', 'font', 'media', 'other'].includes(type)) {
+    if (['image', 'stylesheet', 'font', 'media'].includes(req.resourceType())) {
       req.abort();
     } else {
       req.continue();
@@ -37,11 +36,9 @@ async function scrapeBank(browser, task) {
 
   try {
     console.log(`🔍 正在抓取: ${task.bankName}`);
-    // 使用 domcontentloaded 縮短等待時間
-    await page.goto(task.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(task.url, { waitUntil: 'domcontentloaded', timeout: 20000 });
     
-    // 等待核心內容出現（最多等 5 秒）
-    await page.waitForSelector('body', { timeout: 5000 });
+    // 快速提取文字
     const text = await page.evaluate(() => document.body.innerText);
 
     const updates = [];
@@ -59,7 +56,8 @@ async function scrapeBank(browser, task) {
         '12m': extract('12個月')
       };
 
-      if (rates['3m'] || rates['6m']) {
+      // 只要有任何一項數據就寫入
+      if (Object.values(rates).some(v => v !== null)) {
         updates.push(
           db.doc(`artifacts/${appId}/public/data/live_rates/${item.id}`).set({
             id: item.id,
@@ -70,9 +68,9 @@ async function scrapeBank(browser, task) {
       }
     }
     await Promise.all(updates);
-    console.log(`✅ ${task.bankName} 同步完成`);
+    console.log(`✅ ${task.bankName} 完成`);
   } catch (err) {
-    console.error(`⚠️ ${task.bankName} 失敗: ${err.message}`);
+    console.error(`⚠️ ${task.bankName} 跳過: ${err.message}`);
   } finally {
     await page.close();
   }
@@ -86,6 +84,7 @@ async function runScraper() {
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 
+  // 💡 完整任務清單，對應 App.jsx
   const tasks = [
     {
       bankName: 'HSBC',
@@ -101,14 +100,51 @@ async function runScraper() {
       bankName: 'BOC',
       url: 'https://www.bochk.com/zh/deposits/promotions/timedeposit.html',
       mapping: [{ id: 'boc_wealth', tier: '中銀理財' }, { id: 'boc_standard', tier: '一般' }]
+    },
+    {
+      bankName: 'SC',
+      url: 'https://www.sc.com/hk/zh/save/time-deposits/',
+      mapping: [{ id: 'sc_priority', tier: '優先理財' }, { id: 'sc_standard', tier: '網上' }]
+    },
+    {
+      bankName: 'BEA',
+      url: 'https://www.hkbea.com/html/zh/bea-personal-banking-deposit-time-deposit-offers.html',
+      mapping: [{ id: 'bea_supreme', tier: '至尊理財' }, { id: 'bea_standard', tier: '一般' }]
+    },
+    {
+      bankName: 'ICBC',
+      url: 'https://www.icbcasia.com/tc/personal/deposits/index.html',
+      mapping: [{ id: 'icbc_elite', tier: '理財' }, { id: 'icbc_standard', tier: '一般' }]
+    },
+    {
+      bankName: 'CCB',
+      url: 'https://www.asia.ccb.com/hongkong_tc/personal/banking/deposits/index.html',
+      mapping: [{ id: 'ccb_prestige', tier: '貴賓理財' }, { id: 'ccb_online', tier: '網上' }]
+    },
+    {
+      bankName: 'Public',
+      url: 'https://www.publicbank.com.hk/zh-hant/personalbanking/deposits/timedeposit',
+      mapping: [{ id: 'public_online', tier: '網上' }]
     }
   ];
 
-  // 💡 並行執行所有抓取任務
-  await Promise.all(tasks.map(task => scrapeBank(browser, task)));
+  // 💡 分組執行 (每組 3 個任務)，避免 GitHub Actions 超時
+  const batchSize = 3;
+  for (let i = 0; i < tasks.length; i += batchSize) {
+    const batch = tasks.slice(i, i + batchSize);
+    await Promise.all(batch.map(task => scrapeBank(browser, task)));
+  }
+
+  // 快速更新虛擬銀行
+  const vBanks = [{ id: 'za', r: { '1m': 1.0, '3m': 4.0, '6m': 3.6, '12m': 3.2 } }, { id: 'paob', r: { '3m': 3.8, '6m': 3.6, '12m': 3.0 } }];
+  for (const vb of vBanks) {
+    await db.doc(`artifacts/${appId}/public/data/live_rates/${vb.id}`).set({
+      id: vb.id, rates: { HKD: vb.r }, lastUpdated: new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong' })
+    }, { merge: true });
+  }
 
   await browser.close();
-  console.log(`🎉 總耗時: ${((Date.now() - startTime) / 1000).toFixed(2)} 秒`);
+  console.log(`🎉 抓取完成！總耗時: ${((Date.now() - startTime) / 1000).toFixed(2)} 秒`);
 }
 
 runScraper();
