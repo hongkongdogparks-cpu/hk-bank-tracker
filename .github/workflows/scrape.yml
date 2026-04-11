@@ -8,8 +8,8 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    # 設定超時時間，防止機器人無限期卡住（例如網路問題）
-    timeout-minutes: 15 
+    # 💡 增加時間上限到 30 分鐘，避免因為網路較慢或安裝較久而被強制中斷
+    timeout-minutes: 30 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -17,13 +17,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # 💡 升級到 Node.js 24，解決日誌中的 Deprecation 警告
+          node-version: '24' 
           cache: 'npm'
 
       - name: Install Scraper Dependencies
-        # 💡 精簡優化：不要安裝整個專案，只安裝爬蟲需要的兩個核心工具
-        # 這會比之前的 npm install 快上數倍
-        run: npm install puppeteer firebase-admin
+        # 只安裝必要組件，並加入 --no-audit 縮短檢查時間
+        run: npm install puppeteer firebase-admin --no-audit
 
       - name: Run Scraper
         run: node scraper.js
