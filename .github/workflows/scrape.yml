@@ -8,9 +8,8 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5 # 💡 環境隔離後，目標應在 3 分鐘內完成
     env:
-      # 強制使用 Node 24 以消除舊版警告並確保效能
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
     steps:
       - name: Checkout Code
@@ -21,16 +20,16 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install Scraper Dependencies
-        # 💡 極速安裝策略：僅安裝爬蟲所需核心套件，避免解析整份 package.json
+      - name: Run Scraper with Isolation
+        # 💡 核心修正：在臨時目錄執行，完全隔離主專案的 package.json
         run: |
-          npm install puppeteer-core firebase-admin --no-save --no-package-lock --no-audit --no-fund --prefer-offline
-        env:
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-
-      - name: Run Scraper
-        # 💡 執行 Canvas 中的抓取腳本
-        run: node scraper.js
+          mkdir runner_env
+          cd runner_env
+          npm init -y
+          npm install puppeteer-core firebase-admin --no-audit --no-fund --prefer-offline
+          cp ../scraper.js .
+          node scraper.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
