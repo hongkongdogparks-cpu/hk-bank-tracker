@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 
 // --- Firebase 配置 ---
-// ⚠️ 重要提示：請確保這裡使用的是你自己的 Firebase Config 數據
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
   apiKey: "請在此貼上你的API_KEY",
   authDomain: "hk-bank-tracker.firebaseapp.com",
@@ -75,40 +74,40 @@ const translations = {
 
 const INITIAL_BANKS = [
   // --- 滙豐銀行 (HSBC) ---
-  { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 1.6 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '尊尚特惠', color: 'bg-red-900 text-white' },
-  { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 3.4, '6m': 3.1, '12m': 1.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '卓越特惠', color: 'bg-red-700 text-white' },
-  { id: 'hsbc_one', name: '滙豐 HSBC One / 一般', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': 1.6 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+  { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/premier-elite/offers/time-deposit-rate/', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 1.6 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '尊尚特惠', color: 'bg-red-900 text-white' },
+  { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/premier-elite/offers/time-deposit-rate/', rates: { HKD: { '1m': null, '3m': 3.4, '6m': 3.1, '12m': 1.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '卓越特惠', color: 'bg-red-700 text-white' },
+  { id: 'hsbc_one', name: '滙豐 HSBC One / 一般', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': 1.6 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
   
   // --- 恒生銀行 (Hang Seng) ---
-  { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 2.0 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '特優利率', color: 'bg-green-800 text-white' },
-  { id: 'hangseng_standard', name: '恒生 一般帳戶', stockCode: '0011', domain: 'hangseng.com', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-green-50 text-green-700 border-green-100' },
+  { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/zh-hk/personal/banking/time-deposit-offers/', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 2.0 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '特優利率', color: 'bg-green-800 text-white' },
+  { id: 'hangseng_standard', name: '恒生 一般帳戶', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/zh-hk/personal/banking/time-deposit-offers/', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-green-50 text-green-700 border-green-100' },
 
   // --- 中國銀行 (BOC) ---
-  { id: 'boc_wealth', name: '中銀理財', stockCode: '2388', domain: 'bochk.com', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.3 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '理財晉級', color: 'bg-red-800 text-white' },
-  { id: 'boc_standard', name: '中銀 一般帳戶', stockCode: '2388', domain: 'bochk.com', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '手機銀行', color: 'bg-red-50 text-red-600 border-red-100' },
+  { id: 'boc_wealth', name: '中銀理財', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/zh/deposits/promotions/timedeposit.html', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.3 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '理財晉級', color: 'bg-red-800 text-white' },
+  { id: 'boc_standard', name: '中銀 一般帳戶', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/zh/deposits/promotions/timedeposit.html', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '手機銀行', color: 'bg-red-50 text-red-600 border-red-100' },
 
   // --- 渣打銀行 (Standard Chartered) ---
-  { id: 'sc_priority', name: '渣打 優先理財', stockCode: '2888', domain: 'sc.com/hk', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.5 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '優先理財', color: 'bg-blue-800 text-white' },
-  { id: 'sc_standard', name: '渣打 一般帳戶', stockCode: '2888', domain: 'sc.com/hk', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上特優', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+  { id: 'sc_priority', name: '渣打 優先理財', stockCode: '2888', domain: 'sc.com/hk', url: 'https://www.sc.com/hk/zh/save/time-deposits/', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.5 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '優先理財', color: 'bg-blue-800 text-white' },
+  { id: 'sc_standard', name: '渣打 一般帳戶', stockCode: '2888', domain: 'sc.com/hk', url: 'https://www.sc.com/hk/zh/save/time-deposits/', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上特優', color: 'bg-blue-50 text-blue-700 border-blue-100' },
 
   // --- 東亞銀行 (BEA) ---
-  { id: 'bea_supreme', name: '東亞 至尊理財', stockCode: '0023', domain: 'hkbea.com', rates: { HKD: { '3m': 3.7, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '至尊理財', color: 'bg-red-800 text-white' },
-  { id: 'bea_standard', name: '東亞 一般帳戶', stockCode: '0023', domain: 'hkbea.com', rates: { HKD: { '3m': 3.4, '6m': 3.2 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+  { id: 'bea_supreme', name: '東亞 至尊理財', stockCode: '0023', domain: 'hkbea.com', url: 'https://www.hkbea.com/html/zh/bea-personal-banking-deposit-time-deposit-offers.html', rates: { HKD: { '3m': 3.7, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '至尊理財', color: 'bg-red-800 text-white' },
+  { id: 'bea_standard', name: '東亞 一般帳戶', stockCode: '0023', domain: 'hkbea.com', url: 'https://www.hkbea.com/html/zh/bea-personal-banking-deposit-time-deposit-offers.html', rates: { HKD: { '3m': 3.4, '6m': 3.2 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
 
   // --- 工銀亞洲 (ICBC Asia) ---
-  { id: 'icbc_elite', name: '工銀亞洲 綜合帳戶/理財', stockCode: '1398', domain: 'icbcasia.com', rates: { HKD: { '3m': 3.8, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上特惠', color: 'bg-red-700 text-white' },
-  { id: 'icbc_standard', name: '工銀亞洲 一般帳戶', stockCode: '1398', domain: 'icbcasia.com', rates: { HKD: { '3m': 3.5, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '標準優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+  { id: 'icbc_elite', name: '工銀亞洲 綜合帳戶/理財', stockCode: '1398', domain: 'icbcasia.com', url: 'https://www.icbcasia.com/tc/personal/deposits/index.html', rates: { HKD: { '3m': 3.8, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上特惠', color: 'bg-red-700 text-white' },
+  { id: 'icbc_standard', name: '工銀亞洲 一般帳戶', stockCode: '1398', domain: 'icbcasia.com', url: 'https://www.icbcasia.com/tc/personal/deposits/index.html', rates: { HKD: { '3m': 3.5, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '標準優惠', color: 'bg-red-50 text-red-700 border-red-100' },
 
   // --- 建行亞洲 (CCB Asia) ---
-  { id: 'ccb_prestige', name: '建行亞洲 貴賓理財', stockCode: '0939', domain: 'asia.ccb.com', rates: { HKD: { '3m': 3.9, '6m': 3.7 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '貴賓尊享', color: 'bg-blue-900 text-white' },
-  { id: 'ccb_online', name: '建行亞洲 網上優惠', stockCode: '0939', domain: 'asia.ccb.com', rates: { HKD: { '3m': 3.8, '6m': 3.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上尊享', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+  { id: 'ccb_prestige', name: '建行亞洲 貴賓理財', stockCode: '0939', domain: 'asia.ccb.com', url: 'https://www.asia.ccb.com/hongkong_tc/personal/banking/deposits/index.html', rates: { HKD: { '3m': 3.9, '6m': 3.7 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '貴賓尊享', color: 'bg-blue-900 text-white' },
+  { id: 'ccb_online', name: '建行亞洲 網上優惠', stockCode: '0939', domain: 'asia.ccb.com', url: 'https://www.asia.ccb.com/hongkong_tc/personal/banking/deposits/index.html', rates: { HKD: { '3m': 3.8, '6m': 3.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上尊享', color: 'bg-blue-50 text-blue-700 border-blue-100' },
 
   // --- 其他大行 ---
-  { id: 'public_online', name: '大眾銀行 網上定存', stockCode: '0626', domain: 'publicbank.com.hk', rates: { HKD: { '3m': 3.75, '6m': 3.5 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+  { id: 'public_online', name: '大眾銀行 網上定存', stockCode: '0626', domain: 'publicbank.com.hk', url: 'https://www.publicbank.com.hk/zh-hant/personalbanking/deposits/timedeposit', rates: { HKD: { '3m': 3.75, '6m': 3.5 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
 
   // --- 虛擬銀行 ---
-  { id: 'za', name: 'ZA Bank (眾安)', stockCode: 'VB01', domain: 'za.group', rates: { HKD: { '1m': 1.0, '3m': 4.0, '6m': 3.6, '12m': 3.2 } }, minDeposit: 1, type: '虛擬', fundType: 'both', offer: '不限資金', color: 'bg-teal-50 text-teal-700 border-teal-100' },
-  { id: 'paob', name: '平安壹賬通', stockCode: 'VB05', domain: 'paob.com.hk', rates: { HKD: { '3m': 3.8, '6m': 3.6, '12m': 3.0 } }, minDeposit: 100, type: '虛擬', fundType: 'both', offer: '保證回報', color: 'bg-orange-50 text-orange-700 border-orange-100' },
+  { id: 'za', name: 'ZA Bank (眾安)', stockCode: 'VB01', domain: 'za.group', url: 'https://bank.za.group/hk/deposit', rates: { HKD: { '1m': 1.0, '3m': 4.0, '6m': 3.6, '12m': 3.2 } }, minDeposit: 1, type: '虛擬', fundType: 'both', offer: '不限資金', color: 'bg-teal-50 text-teal-700 border-teal-100' },
+  { id: 'paob', name: '平安壹賬通', stockCode: 'VB05', domain: 'paob.com.hk', url: 'https://www.paob.com.hk/tc/deposit.html', rates: { HKD: { '3m': 3.8, '6m': 3.6, '12m': 3.0 } }, minDeposit: 100, type: '虛擬', fundType: 'both', offer: '保證回報', color: 'bg-orange-50 text-orange-700 border-orange-100' },
 ];
 
 export default function App() {
@@ -120,7 +119,7 @@ export default function App() {
   const [fundSource, setFundSource] = useState('new');
   const [filterType, setFilterType] = useState('全部');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('rate');
+  const [sortBy, setSortBy] = useState('stockCode'); // 💡 預設改為按上市編號排序
   const [eligibleOnly, setEligibleOnly] = useState(false);
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [lastSyncTime, setLastSyncTime] = useState("");
@@ -155,6 +154,9 @@ export default function App() {
   }, [user]);
 
   const sortedBanks = useMemo(() => {
+    // 定義銀行類型優先權：傳統大行(1) > 虛擬銀行(2)
+    const typePriority = { '傳統': 1, '虛擬': 2 };
+
     return banks
       .filter(bank => {
         const matchesSearch = bank.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -164,10 +166,22 @@ export default function App() {
         return matchesSearch && matchesType && matchesFund && meetsMin;
       })
       .sort((a, b) => {
-        const rateA = (a.rates[currency] && a.rates[currency][tenor]) || 0;
-        const rateB = (b.rates[currency] && b.rates[currency][tenor]) || 0;
-        if (sortBy === 'rate') return rateB - rateA;
-        return parseInt(a.stockCode.replace(/\D/g,'')) - parseInt(b.stockCode.replace(/\D/g,''));
+        // 1. 首先按類型排序 (傳統優先)
+        const typeA = typePriority[a.type] || 3;
+        const typeB = typePriority[b.type] || 3;
+        if (typeA !== typeB) return typeA - typeB;
+
+        // 2. 同一類型內，應用選定的排序方式
+        if (sortBy === 'rate') {
+          const rateA = (a.rates[currency] && a.rates[currency][tenor]) || 0;
+          const rateB = (b.rates[currency] && b.rates[currency][tenor]) || 0;
+          return rateB - rateA;
+        } else {
+          // 按上市編號排序 (Traditional 優先)
+          const codeA = parseInt(a.stockCode.replace(/\D/g,'')) || 99999;
+          const codeB = parseInt(b.stockCode.replace(/\D/g,'')) || 99999;
+          return codeA - codeB;
+        }
       });
   }, [banks, tenor, searchQuery, filterType, fundSource, eligibleOnly, amount, sortBy, t]);
 
@@ -313,9 +327,14 @@ export default function App() {
                       {isAvailable ? `+HKD ${calculateInterest(currentRate)}` : "---"}
                     </p>
                   </div>
-                  <button className="hidden sm:flex p-5 bg-slate-50 text-slate-300 rounded-[1.8rem] group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                  <a 
+                    href={bank.url || '#'} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hidden sm:flex p-5 bg-slate-50 text-slate-300 rounded-[1.8rem] hover:bg-blue-50 hover:text-blue-600 transition-all"
+                  >
                     <ExternalLink className="w-6 h-6" />
-                  </button>
+                  </a>
                 </div>
               </div>
             );
