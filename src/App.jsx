@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { 
   TrendingUp, Search, Calculator, RefreshCw, Info, ExternalLink, Sparkles, 
   ArrowUpDown, Zap, Globe, Bell, Activity, ShieldCheck, Filter, SortAsc, 
@@ -9,11 +9,14 @@ import {
 } from 'lucide-react';
 
 // --- Firebase 配置 ---
+// ⚠️ 重要提示：請確保這裡使用的是你自己的 Firebase Config 數據
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "placeholder",
-  authDomain: "placeholder",
-  projectId: "placeholder",
-  appId: "placeholder"
+  apiKey: "請在此貼上你的API_KEY",
+  authDomain: "hk-bank-tracker.firebaseapp.com",
+  projectId: "hk-bank-tracker",
+  storageBucket: "hk-bank-tracker.firebasestorage.app",
+  messagingSenderId: "631669349028",
+  appId: "1:631669349028:web:c417086999a022363ce431"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -40,7 +43,10 @@ const translations = {
     updated: "雲端同步",
     marketAvg: "市場均值",
     interestLabel: "預計利息",
-    minDeposit: "起存額"
+    rateLabel: "年利率 p.a.",
+    minDeposit: "起存額",
+    amountLabel: "預計存款金額",
+    notAvailable: "暫無提供"
   },
   en: {
     title: "HK Deposit Tracker",
@@ -60,15 +66,47 @@ const translations = {
     updated: "Cloud Sync",
     marketAvg: "Market Avg",
     interestLabel: "Est. Interest",
-    minDeposit: "Min. Dep"
+    rateLabel: "Rate p.a.",
+    minDeposit: "Min. Dep",
+    amountLabel: "Deposit Amount",
+    notAvailable: "N/A"
   }
 };
 
 const INITIAL_BANKS = [
-  { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': 0.5, '3m': 3.6, '6m': 3.4, '12m': 1.6 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '尊尚特惠', color: 'bg-red-900 text-white' },
-  { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': 0.5, '3m': 3.4, '6m': 3.1, '12m': 1.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '卓越特惠', color: 'bg-red-700 text-white' },
-  { id: 'hsbc_one', name: '滙豐 HSBC One / 一般', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': 0.5, '3m': 2.2, '6m': 2.0, '12m': 1.6 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
-  { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', rates: { HKD: { '3m': 3.6, '6m': 3.4, '12m': 2.0 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '特優利率', color: 'bg-green-800 text-white' },
+  // --- 滙豐銀行 (HSBC) ---
+  { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 1.6 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '尊尚特惠', color: 'bg-red-900 text-white' },
+  { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 3.4, '6m': 3.1, '12m': 1.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '卓越特惠', color: 'bg-red-700 text-white' },
+  { id: 'hsbc_one', name: '滙豐 HSBC One / 一般', stockCode: '0005', domain: 'hsbc.com.hk', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': 1.6 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+  
+  // --- 恒生銀行 (Hang Seng) ---
+  { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', rates: { HKD: { '1m': null, '3m': 3.6, '6m': 3.4, '12m': 2.0 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '特優利率', color: 'bg-green-800 text-white' },
+  { id: 'hangseng_standard', name: '恒生 一般帳戶', stockCode: '0011', domain: 'hangseng.com', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-green-50 text-green-700 border-green-100' },
+
+  // --- 中國銀行 (BOC) ---
+  { id: 'boc_wealth', name: '中銀理財', stockCode: '2388', domain: 'bochk.com', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.3 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '理財晉級', color: 'bg-red-800 text-white' },
+  { id: 'boc_standard', name: '中銀 一般帳戶', stockCode: '2388', domain: 'bochk.com', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.1 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '手機銀行', color: 'bg-red-50 text-red-600 border-red-100' },
+
+  // --- 渣打銀行 (Standard Chartered) ---
+  { id: 'sc_priority', name: '渣打 優先理財', stockCode: '2888', domain: 'sc.com/hk', rates: { HKD: { '1m': null, '3m': 3.5, '6m': 3.5 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '優先理財', color: 'bg-blue-800 text-white' },
+  { id: 'sc_standard', name: '渣打 一般帳戶', stockCode: '2888', domain: 'sc.com/hk', rates: { HKD: { '1m': null, '3m': 3.3, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上特優', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+
+  // --- 東亞銀行 (BEA) ---
+  { id: 'bea_supreme', name: '東亞 至尊理財', stockCode: '0023', domain: 'hkbea.com', rates: { HKD: { '3m': 3.7, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '至尊理財', color: 'bg-red-800 text-white' },
+  { id: 'bea_standard', name: '東亞 一般帳戶', stockCode: '0023', domain: 'hkbea.com', rates: { HKD: { '3m': 3.4, '6m': 3.2 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+
+  // --- 工銀亞洲 (ICBC Asia) ---
+  { id: 'icbc_elite', name: '工銀亞洲 綜合帳戶/理財', stockCode: '1398', domain: 'icbcasia.com', rates: { HKD: { '3m': 3.8, '6m': 3.5 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上特惠', color: 'bg-red-700 text-white' },
+  { id: 'icbc_standard', name: '工銀亞洲 一般帳戶', stockCode: '1398', domain: 'icbcasia.com', rates: { HKD: { '3m': 3.5, '6m': 3.3 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '標準優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+
+  // --- 建行亞洲 (CCB Asia) ---
+  { id: 'ccb_prestige', name: '建行亞洲 貴賓理財', stockCode: '0939', domain: 'asia.ccb.com', rates: { HKD: { '3m': 3.9, '6m': 3.7 } }, minDeposit: 1000000, type: '傳統', fundType: 'new', offer: '貴賓尊享', color: 'bg-blue-900 text-white' },
+  { id: 'ccb_online', name: '建行亞洲 網上優惠', stockCode: '0939', domain: 'asia.ccb.com', rates: { HKD: { '3m': 3.8, '6m': 3.6 } }, minDeposit: 100000, type: '傳統', fundType: 'new', offer: '網上尊享', color: 'bg-blue-50 text-blue-700 border-blue-100' },
+
+  // --- 其他大行 ---
+  { id: 'public_online', name: '大眾銀行 網上定存', stockCode: '0626', domain: 'publicbank.com.hk', rates: { HKD: { '3m': 3.75, '6m': 3.5 } }, minDeposit: 10000, type: '傳統', fundType: 'new', offer: '網上優惠', color: 'bg-red-50 text-red-700 border-red-100' },
+
+  // --- 虛擬銀行 ---
   { id: 'za', name: 'ZA Bank (眾安)', stockCode: 'VB01', domain: 'za.group', rates: { HKD: { '1m': 1.0, '3m': 4.0, '6m': 3.6, '12m': 3.2 } }, minDeposit: 1, type: '虛擬', fundType: 'both', offer: '不限資金', color: 'bg-teal-50 text-teal-700 border-teal-100' },
   { id: 'paob', name: '平安壹賬通', stockCode: 'VB05', domain: 'paob.com.hk', rates: { HKD: { '3m': 3.8, '6m': 3.6, '12m': 3.0 } }, minDeposit: 100, type: '虛擬', fundType: 'both', offer: '保證回報', color: 'bg-orange-50 text-orange-700 border-orange-100' },
 ];
@@ -119,20 +157,22 @@ export default function App() {
   const sortedBanks = useMemo(() => {
     return banks
       .filter(bank => {
-        const hasRate = bank.rates[currency] && bank.rates[currency][tenor];
         const matchesSearch = bank.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesType = filterType === '全部' || bank.type === filterType;
+        const matchesType = filterType === '全部' || (filterType === t.trad ? bank.type === '傳統' : bank.type === '虛擬');
         const matchesFund = bank.fundType === 'both' || bank.fundType === fundSource;
         const meetsMin = !eligibleOnly || amount >= bank.minDeposit;
-        return hasRate && matchesSearch && matchesType && matchesFund && meetsMin;
+        return matchesSearch && matchesType && matchesFund && meetsMin;
       })
       .sort((a, b) => {
-        if (sortBy === 'rate') return b.rates[currency][tenor] - a.rates[currency][tenor];
-        return parseInt(a.stockCode) - parseInt(b.stockCode);
+        const rateA = (a.rates[currency] && a.rates[currency][tenor]) || 0;
+        const rateB = (b.rates[currency] && b.rates[currency][tenor]) || 0;
+        if (sortBy === 'rate') return rateB - rateA;
+        return parseInt(a.stockCode.replace(/\D/g,'')) - parseInt(b.stockCode.replace(/\D/g,''));
       });
-  }, [banks, tenor, searchQuery, filterType, fundSource, eligibleOnly, amount, sortBy]);
+  }, [banks, tenor, searchQuery, filterType, fundSource, eligibleOnly, amount, sortBy, t]);
 
   const calculateInterest = (rate) => {
+    if (!rate) return "---";
     const tMap = { '1m': 1/12, '3m': 0.25, '6m': 0.5, '12m': 1 };
     return Math.floor(amount * (rate / 100) * tMap[tenor]).toLocaleString();
   };
@@ -179,7 +219,6 @@ export default function App() {
 
         {/* Combined Search & Filter Bar */}
         <div className="sticky top-4 z-50 space-y-4 mb-10">
-          {/* Row 1: Search & Sort */}
           <div className="bg-white/80 backdrop-blur-xl p-4 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300" />
@@ -205,10 +244,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Row 2: Button Style Filters (Request A, B, C) */}
           <div className="flex flex-wrap gap-4 items-center">
-            
-            {/* A) Tenor Filters */}
             <div className="bg-white p-2 rounded-[1.8rem] border border-slate-200 shadow-sm flex items-center gap-1">
               <div className="px-3 py-1 flex items-center gap-2 border-r border-slate-100 mr-1">
                 <CalendarDays className="w-4 h-4 text-blue-500" />
@@ -219,7 +255,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* B) Fund Source Filters */}
             <div className="bg-white p-2 rounded-[1.8rem] border border-slate-200 shadow-sm flex items-center gap-1">
               <div className="px-3 py-1 flex items-center gap-2 border-r border-slate-100 mr-1">
                 <Wallet className="w-4 h-4 text-emerald-500" />
@@ -229,7 +264,6 @@ export default function App() {
               <button onClick={() => setFundSource('existing')} className={`px-5 py-2 rounded-2xl text-[11px] font-black transition-all ${fundSource === 'existing' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-slate-50 text-slate-500'}`}>{t.fundExt}</button>
             </div>
 
-            {/* C) Bank Type Filters */}
             <div className="bg-white p-2 rounded-[1.8rem] border border-slate-200 shadow-sm flex items-center gap-1">
               <div className="px-3 py-1 flex items-center gap-2 border-r border-slate-100 mr-1">
                 <Building2 className="w-4 h-4 text-indigo-500" />
@@ -239,45 +273,53 @@ export default function App() {
                 <button key={type} onClick={() => setFilterType(type)} className={`px-5 py-2 rounded-2xl text-[11px] font-black transition-all ${filterType === type ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-50 text-slate-500'}`}>{type}</button>
               ))}
             </div>
-
           </div>
         </div>
 
         {/* Bank Results List */}
         <div className="space-y-4">
-          {sortedBanks.map(bank => (
-            <div key={bank.id} className={`bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-wrap items-center justify-between hover:shadow-2xl hover:border-blue-300 transition-all group ${amount < bank.minDeposit ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
-              <div className="flex items-center gap-8">
-                <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
-                   <img src={`https://www.google.com/s2/favicons?sz=128&domain=${bank.domain}`} alt={bank.name} className="w-full h-full object-contain" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-2xl font-black tracking-tight text-slate-900">{lang === 'en' ? (bank.name_en || bank.name) : bank.name}</h3>
-                    <span className="text-[10px] font-black bg-slate-100 text-slate-400 px-2 py-1 rounded-lg uppercase">{bank.stockCode}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${bank.color}`}>{bank.offer}</span>
-                    <span className="text-[10px] font-black text-slate-400 uppercase">{t.minDeposit}: ${bank.minDeposit.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
+          {sortedBanks.map(bank => {
+            const currentRate = bank.rates[currency] && bank.rates[currency][tenor];
+            const isAvailable = currentRate !== null && currentRate !== undefined;
 
-              <div className="flex items-center gap-12 mt-8 md:mt-0 w-full md:w-auto justify-between md:justify-end border-t border-slate-50 md:border-t-0 pt-6 md:pt-0">
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t.rateLabel}</p>
-                  <p className="text-4xl font-black text-slate-900 tabular-nums">{bank.rates[currency][tenor].toFixed(2)}%</p>
+            return (
+              <div key={bank.id} className={`bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-wrap items-center justify-between hover:shadow-2xl hover:border-blue-300 transition-all group ${amount < bank.minDeposit ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                <div className="flex items-center gap-8">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                     <img src={`https://www.google.com/s2/favicons?sz=128&domain=${bank.domain}`} alt={bank.name} className="w-full h-full object-contain" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-2xl font-black tracking-tight text-slate-900">{bank.name}</h3>
+                      <span className="text-[10px] font-black bg-slate-100 text-slate-400 px-2 py-1 rounded-lg uppercase">{bank.stockCode}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${bank.color}`}>{bank.offer}</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase">{t.minDeposit}: ${bank.minDeposit.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right min-w-[140px]">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t.interestLabel}</p>
-                  <p className="text-3xl font-black text-emerald-600 tabular-nums">+HKD {calculateInterest(bank.rates[currency][tenor])}</p>
+
+                <div className="flex items-center gap-12 mt-8 md:mt-0 w-full md:w-auto justify-between md:justify-end border-t border-slate-50 md:border-t-0 pt-6 md:pt-0">
+                  <div className="text-right min-w-[100px]">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t.rateLabel}</p>
+                    <p className={`text-4xl font-black tabular-nums ${isAvailable ? 'text-slate-900' : 'text-slate-300 text-xl'}`}>
+                      {isAvailable ? `${currentRate.toFixed(2)}%` : t.notAvailable}
+                    </p>
+                  </div>
+                  <div className="text-right min-w-[140px]">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t.interestLabel}</p>
+                    <p className={`text-3xl font-black tabular-nums ${isAvailable ? 'text-emerald-600' : 'text-slate-300'}`}>
+                      {isAvailable ? `+HKD ${calculateInterest(currentRate)}` : "---"}
+                    </p>
+                  </div>
+                  <button className="hidden sm:flex p-5 bg-slate-50 text-slate-300 rounded-[1.8rem] group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+                    <ExternalLink className="w-6 h-6" />
+                  </button>
                 </div>
-                <button className="hidden sm:flex p-5 bg-slate-50 text-slate-300 rounded-[1.8rem] group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
-                  <ExternalLink className="w-6 h-6" />
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer Disclaimer */}
