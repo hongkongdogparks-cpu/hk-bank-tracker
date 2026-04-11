@@ -2,14 +2,14 @@ name: Daily Rates Update
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *' # 香港時間每天早上 8 點執行
+  workflow_dispatch: # 允許手動點擊按鈕執行
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    # 💡 增加時間上限到 30 分鐘，避免因為網路較慢或安裝較久而被強制中斷
-    timeout-minutes: 30 
+    # 回歸正常的 15 分鐘上限，因為不下載瀏覽器會非常快
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -17,15 +17,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          # 💡 升級到 Node.js 24，解決日誌中的 Deprecation 警告
-          node-version: '24' 
+          node-version: '24' # 使用最新的穩定版本
           cache: 'npm'
 
       - name: Install Scraper Dependencies
-        # 只安裝必要組件，並加入 --no-audit 縮短檢查時間
-        run: npm install puppeteer firebase-admin --no-audit
+        # 💡 核心改動：設定環境變數跳過瀏覽器下載，並使用更輕量的 puppeteer-core
+        run: |
+          npm install puppeteer-core firebase-admin --no-audit --no-fund
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
 
       - name: Run Scraper
         run: node scraper.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # 💡 新增：告訴 Puppeteer 直接使用 GitHub Runner 系統內建的 Chrome 路徑
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
