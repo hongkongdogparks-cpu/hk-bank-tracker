@@ -1,0 +1,27 @@
+name: Sync Rates from CSV
+
+on:
+  push:
+    paths:
+      - 'rates.csv'         # 只要偵測到 rates.csv 檔案有變動並 Push，就會觸發更新
+  workflow_dispatch:        # 允許您在 GitHub 介面手動點擊按鈕執行
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install firebase-admin
+
+      - name: Run CSV Updater
+        run: node csv_updater.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
