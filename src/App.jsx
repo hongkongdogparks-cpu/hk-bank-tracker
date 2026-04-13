@@ -5,7 +5,7 @@ import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import {
   TrendingUp, Search, ExternalLink, SortAsc,
   CalendarDays, Wallet, ShieldCheck,
-  Clock, Activity, Database
+  Clock, Activity, Database, ArrowUpRight, Globe, Smartphone, MousePointer2
 } from 'lucide-react';
  
 // ── Firebase Config ──────────────────────────────────────────
@@ -23,55 +23,66 @@ try {
   app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-} catch (e) { console.error('Firebase init error:', e); }
+} catch (e) { console.error(e); }
  
 const APP_ID = 'hk-fd-tracker-pro'; 
  
+// ── Translation Config ──────────────────────────────────────────
 const T = {
   zh_TW: {
-    title: '香港定期存款追蹤器',
-    subtitle: '專業級定存利率監控系統',
-    all: '全部銀行', trad: '傳統大行', virt: '虛擬銀行',
-    searchPlace: '搜尋銀行、編號或帳戶等級…',
-    sortRate: '按利率排序', sortCode: '按編號排序',
-    interestLabel: '預計利息收益', rateLabel: '年利率 p.a.',
-    minDeposit: '起存額', amountLabel: '預計存款金額 (HKD)',
-    notAvailable: '暫無提供', loading: '連接數據中…', updated: '數據更新', syncing: '實時同步中'
+    title: '港元定存追蹤器',
+    subtitle: '專業級實時利率監控',
+    all: '全部', trad: '傳統銀行', virt: '虛擬銀行',
+    searchPlace: '搜尋銀行、代號或帳戶…',
+    sortRate: '利率最高', sortCode: '銀行編號',
+    interestLabel: '預計收益', rateLabel: '年利率 p.a.',
+    minDeposit: '起存額', amountLabel: '存款金額',
+    tenorLabel: '存期選擇', notAvailable: 'N/A', 
+    loading: '載入中', updated: '更新於', syncing: '同步中',
+    stock: '代號',
+    newFund: '新資金', existingFund: '現有資金',
+    online: '網上', mobile: '手機 App',
+    lastUpdateBy: '最後更新時間：',
+    adLabel: '贊助商內容'
   },
   en: {
-    title: 'HK FD Tracker Pro',
+    title: 'HK FD Tracker',
     subtitle: 'Professional FD Monitor',
-    all: 'All Banks', trad: 'Traditional', virt: 'Virtual',
+    all: 'All', trad: 'Traditional', virt: 'Virtual',
     searchPlace: 'Search bank, code or tier…',
-    sortRate: 'By Rate', sortCode: 'By Code',
-    interestLabel: 'Est. Interest', rateLabel: 'Rate p.a.',
-    minDeposit: 'Min. Dep', amountLabel: 'Deposit Amount (HKD)',
-    notAvailable: 'N/A', loading: 'Connecting...', updated: 'Updated', syncing: 'Live Syncing'
+    sortRate: 'Highest Rate', sortCode: 'Bank Code',
+    interestLabel: 'Est. Return', rateLabel: 'Rate p.a.',
+    minDeposit: 'Min. Dep', amountLabel: 'Amount',
+    tenorLabel: 'Select Tenor', notAvailable: 'N/A', 
+    loading: 'Loading', updated: 'Update', syncing: 'Live',
+    stock: 'Code',
+    newFund: 'New Fund', existingFund: 'Existing Fund',
+    online: 'Online', mobile: 'Mobile App',
+    lastUpdateBy: 'Last update by: ',
+    adLabel: 'ADVERTISEMENT'
   },
 };
  
-// 💡 INITIAL_BANKS 必須與 rates.csv 中的 ID 完全對應
+// ── Bank Configuration ──────────────────────────────────────────
 const INITIAL_BANKS = [
-  { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-900 text-white' },
-  { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-700 text-white' },
-  { id: 'hsbc_one', name: '滙豐 HSBC One', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '網上優惠', color: 'bg-red-50 text-red-700 border border-red-100' },
-  { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金特惠', color: 'bg-green-800 text-white' },
-  { id: 'hangseng_standard', name: '恒生 一般帳戶', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', offer: '一般優惠', color: 'bg-green-100 text-green-800 border' },
-  { id: 'boc_wealth', name: '中銀理財', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 1000000, type: 'trad', offer: '特選客戶', color: 'bg-red-800 text-white' },
-  { id: 'boc_standard', name: '中銀 一般客戶', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 10000, type: 'trad', offer: '掛牌利率', color: 'bg-red-50 text-red-700 border' },
-  { id: 'citi_gold', name: '花旗 Citigold', stockCode: 'US:C', domain: 'citibank.com.hk', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', rates: {}, minDeposit: 50000, type: 'trad', offer: '新客戶優惠', color: 'bg-blue-700 text-white shadow-lg' },
-  { id: 'sc_priority', name: '渣打 優先理財', stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1000000, type: 'trad', offer: '優先理財', color: 'bg-blue-800 text-white' },
-  { id: 'sc_standard', name: '渣打 一般客戶', stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1, type: 'trad', offer: '網上優惠', color: 'bg-blue-50 text-blue-700 border border-blue-100' },
-  { id: 'bea_supreme', name: '東亞 至尊理財', stockCode: '0023', domain: 'hkbea.com', url: 'https://www.hkbea.com/html/en/bea-personal-banking-supremegold-time-deposit.html', rates: {}, minDeposit: 100000, type: 'trad', offer: '新客戶特惠', color: 'bg-red-800 text-white' },
-  { id: 'icbc_elite', name: '工銀亞洲 理財金', stockCode: '1398', domain: 'icbcasia.com', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', rates: {}, minDeposit: 3000000, type: 'trad', offer: 'Wealth Mgt', color: 'bg-red-700 text-white' },
-  { id: 'ccb_prestige', name: '建行亞洲 貴賓理財', stockCode: '0939', domain: 'asia.ccb.com', url: 'https://www.asia.ccb.com/hongkong/personal/accounts/dep_rates.html', rates: {}, minDeposit: 1000000, type: 'trad', offer: '掛牌利率', color: 'bg-blue-900 text-white' },
-  { id: 'public_online', name: '大眾銀行 網上定存', stockCode: '0626', domain: 'publicbank.com.hk', url: 'https://www.publicbank.com.hk/en/usefultools/rates/depositinterestrates', rates: {}, minDeposit: 10000, type: 'trad', offer: 'Board Rate', color: 'bg-red-50 text-red-800 border border-red-100' },
-  { id: 'za', name: 'ZA Bank (眾安)', stockCode: 'VB01', domain: 'za.group', url: 'https://bank.za.group/hk/deposit', rates: {}, minDeposit: 1, type: 'virt', offer: '活期+定期', color: 'bg-teal-600 text-white' },
-  { id: 'fusion', name: '富融 Fusion', stockCode: 'VB02', domain: 'fusionbank.com', url: 'https://www.fusionbank.com/deposit.html?lang=tc', rates: {}, minDeposit: 1000000, type: 'virt', offer: '階梯利率', color: 'bg-purple-600 text-white' },
-  { id: 'mox', name: 'Mox Bank', stockCode: 'VB04', domain: 'mox.com', url: 'https://mox.com/zh/promotions/time-deposit/', rates: {}, minDeposit: 1, type: 'virt', offer: 'Mox定存', color: 'bg-black text-white' },
-  { id: 'paob', name: '平安壹賬通 PAOB', stockCode: 'VB05', domain: 'paob.com.hk', url: 'https://www.paob.com.hk/tc/deposit.html', rates: {}, minDeposit: 100, type: 'virt', offer: '保證回報', color: 'bg-orange-50 text-orange-800 border' },
-  { id: 'livi', name: 'Livi Bank', stockCode: 'VB03', domain: 'livibank.com', url: 'https://www.livibank.com/features/livisave.html', rates: {}, minDeposit: 1, type: 'virt', offer: 'liviSave', color: 'bg-blue-600 text-white' },
-  { id: 'airstar', name: '天星 Airstar', stockCode: 'VB08', domain: 'airstarbank.com', url: 'https://www.airstarbank.com/en-hk/hkprime.html', rates: {}, minDeposit: 1, type: 'virt', offer: '星級定存', color: 'bg-indigo-600 text-white' },
+  { id: 'hsbc_elite', name: { zh: '滙豐 卓越理財尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/premier-elite/offers/time-deposit-rate/', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-rose-600' },
+  { id: 'hsbc_premier', name: { zh: '滙豐 卓越理財', en: 'HSBC Premier' }, stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/premier-elite/offers/time-deposit-rate/', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-rose-500' },
+  { id: 'hsbc_one', name: { zh: '滙豐 HSBC One', en: 'HSBC One' }, stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-rose-400' },
+  { id: 'hangseng_prestige', name: { zh: '恒生 優越理財', en: 'Hang Seng Prestige' }, stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-emerald-600' },
+  { id: 'hangseng_standard', name: { zh: '恒生 一般帳戶', en: 'Hang Seng Integrated' }, stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'existing', channel: 'online', color: 'bg-emerald-500' },
+  { id: 'boc_wealth', name: { zh: '中銀理財', en: 'BOC Wealth Mgt' }, stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 1000000, type: 'trad', fundType: 'new', channel: 'mobile', color: 'bg-red-700' },
+  { id: 'boc_standard', name: { zh: '中銀 一般客戶', en: 'BOC Personal' }, stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'existing', channel: 'mobile', color: 'bg-red-600' },
+  { id: 'citi_gold', name: { zh: '花旗 Citigold', en: 'Citi Citigold' }, stockCode: 'US:C', domain: 'citibank.com.hk', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', rates: {}, minDeposit: 50000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-blue-800' },
+  { id: 'sc_priority', name: { zh: '渣打 優先理財', en: 'SC Priority' }, stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1000000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-blue-600' },
+  { id: 'sc_standard', name: { zh: '渣打 一般客戶', en: 'SC Standard' }, stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1, type: 'trad', fundType: 'existing', channel: 'online', color: 'bg-blue-500' },
+  { id: 'bea_supreme', name: { zh: '東亞 至尊理財', en: 'BEA SupremeGold' }, stockCode: '0023', domain: 'hkbea.com', url: 'https://www.hkbea.com/html/en/bea-personal-banking-supremegold-time-deposit.html', rates: {}, minDeposit: 100000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-amber-600' },
+  { id: 'icbc_elite', name: { zh: '工銀 理財金', en: 'ICBC Elite' }, stockCode: '1398', domain: 'icbcasia.com', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', rates: {}, minDeposit: 3000000, type: 'trad', fundType: 'new', channel: 'online', color: 'bg-red-800' },
+  { id: 'ccb_prestige', name: { zh: '建行 貴賓理財', en: 'CCB Prestige' }, stockCode: '0939', domain: 'asia.ccb.com', url: 'https://www.asia.ccb.com/hongkong/personal/accounts/dep_rates.html', rates: {}, minDeposit: 1000000, type: 'trad', fundType: 'existing', channel: 'online', color: 'bg-blue-900' },
+  { id: 'public_online', name: { zh: '大眾 網上定存', en: 'Public Bank' }, stockCode: '0626', domain: 'publicbank.com.hk', url: 'https://www.publicbank.com.hk/en/usefultools/rates/depositinterestrates', rates: {}, minDeposit: 10000, type: 'trad', fundType: 'existing', channel: 'online', color: 'bg-orange-600' },
+  { id: 'za', name: { zh: '眾安 ZA Bank', en: 'ZA Bank' }, stockCode: 'VB01', domain: 'za.group', url: 'https://bank.za.group/hk/deposit', rates: {}, minDeposit: 1, type: 'virt', fundType: 'existing', channel: 'mobile', color: 'bg-teal-600' },
+  { id: 'fusion', name: { zh: '富融 Fusion', en: 'Fusion Bank' }, stockCode: 'VB02', domain: 'fusionbank.com', url: 'https://www.fusionbank.com/deposit.html?lang=tc', rates: {}, minDeposit: 1, type: 'virt', fundType: 'existing', channel: 'mobile', color: 'bg-purple-600' },
+  { id: 'mox', name: { zh: 'Mox Bank', en: 'Mox Bank' }, stockCode: 'VB04', domain: 'mox.com', url: 'https://mox.com/zh/promotions/time-deposit/', rates: {}, minDeposit: 1, type: 'virt', fundType: 'existing', channel: 'mobile', color: 'bg-black' },
+  { id: 'paob', name: { zh: '平安 PAOB', en: 'PAOB' }, stockCode: 'VB05', domain: 'paob.com.hk', url: 'https://www.paob.com.hk/tc/deposit.html', rates: {}, minDeposit: 100, type: 'virt', fundType: 'existing', channel: 'mobile', color: 'bg-orange-500' },
 ];
  
 export default function App() {
@@ -81,32 +92,25 @@ export default function App() {
   const [amount, setAmount] = useState(1000000);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('stockCode');
+  const [sortBy, setSortBy] = useState('rate');
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [lastSync, setLastSync] = useState(null);
   const [syncedCount, setSyncedCount] = useState(0);
  
   const t = T[lang];
+  const lK = lang === 'zh_TW' ? 'zh' : 'en';
  
-  // 匿名登入
   useEffect(() => {
     if (!auth) return;
-    const unsub = onAuthStateChanged(auth, u => {
-      if (u) {
-        setUser(u);
-        console.log("✅ Firebase Auth: Success");
-      } else {
-        signInAnonymously(auth).catch(err => console.error("❌ Auth Error:", err));
-      }
+    const unsubscribe = onAuthStateChanged(auth, u => {
+      if (u) setUser(u);
+      else signInAnonymously(auth).catch(console.error);
     });
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
  
-  // 實時數據監聽
   useEffect(() => {
     if (!user || !db) return;
-    
-    console.log("🔌 Initializing Listeners...");
     const unsubs = INITIAL_BANKS.map(bank => {
       const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rates', bank.id);
       return onSnapshot(ref, snap => {
@@ -116,142 +120,258 @@ export default function App() {
           setSyncedCount(prev => prev + 1);
           if (data.lastUpdated) setLastSync(data.lastUpdated);
         }
-      }, err => {
-        console.error(`❌ Snapshot Error for ${bank.id}:`, err.message);
       });
     });
     return () => unsubs.forEach(u => u());
   }, [user]);
  
-  const displayed = useMemo(() => {
+  const sortedBanks = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return banks
       .filter(b => {
-        if (q && !b.name.toLowerCase().includes(q) && !b.stockCode.toLowerCase().includes(q)) return false;
+        const nameMatch = b.name.zh.toLowerCase().includes(q) || b.name.en.toLowerCase().includes(q);
+        const codeMatch = b.stockCode.toLowerCase().includes(q);
+        if (q && !nameMatch && !codeMatch) return false;
         if (filterType !== 'all' && b.type !== filterType) return false;
         return true;
       })
       .sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'trad' ? -1 : 1;
         if (sortBy === 'rate') {
           const ra = a.rates?.HKD?.[tenor] ?? -1;
           const rb = b.rates?.HKD?.[tenor] ?? -1;
           return rb - ra;
         }
-        const ca = a.type === 'virt' ? 99999 : (parseInt(a.stockCode) || 99998);
-        const cb = b.type === 'virt' ? 99999 : (parseInt(b.stockCode) || 99998);
-        return ca - cb;
+        return a.stockCode.localeCompare(b.stockCode);
       });
   }, [banks, tenor, searchQuery, filterType, sortBy]);
  
-  const interest = (rate) => {
+  const calcInt = (rate) => {
     if (!rate || !amount) return 0;
-    const m = { '1m': 1/12, '3m': 0.25, '6m': 0.5, '12m': 1 }[tenor];
+    const m = { '3m': 0.25, '6m': 0.5, '12m': 1 }[tenor];
     return Math.floor(amount * (rate / 100) * m);
   };
  
   return (
-    <div className="min-h-screen bg-[#FDFDFF] text-slate-900 p-4 md:p-10 font-sans antialiased">
-      <div className="max-w-5xl mx-auto space-y-8">
-        
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${syncedCount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                <span className={`w-2 h-2 rounded-full bg-current ${syncedCount > 0 ? 'animate-pulse' : ''}`}></span>
-                {syncedCount > 0 ? t.syncing : 'Connecting...'}
-              </span>
-              <span className="flex items-center gap-1 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded-md tracking-tighter uppercase shadow-sm"><Database className="w-3 h-3" /> Firestore Linked</span>
-              {lastSync && <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter"><Clock className="w-3 h-3 inline mr-1" /> {lastSync}</span>}
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans antialiased pb-20">
+      {/* Top Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
+              <TrendingUp size={24} />
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter flex items-center gap-4 text-slate-900"><TrendingUp className="w-12 h-12 text-blue-600" /> {t.title}</h1>
-            <p className="text-slate-400 font-bold text-xl opacity-80 leading-none">{t.subtitle}</p>
+            <div>
+              <h1 className="text-xl font-black tracking-tighter leading-none">{t.title}</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`w-2 h-2 rounded-full ${syncedCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.syncing}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm shrink-0">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
             {['zh_TW', 'en'].map(l => (
-              <button key={l} onClick={() => setLang(l)} className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all ${lang === l ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400'}`}>{l === 'zh_TW' ? '繁' : 'EN'}</button>
+              <button 
+                key={l} 
+                onClick={() => setLang(l)} 
+                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${lang === l ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+              >
+                {l === 'zh_TW' ? '繁' : 'EN'}
+              </button>
             ))}
-          </div>
-        </header>
-
-        <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 shadow-sm grid md:grid-cols-2 gap-10">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><Wallet className="w-4 h-4 text-emerald-500" /> {t.amountLabel}</label>
-            <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full bg-slate-50 px-8 py-5 rounded-3xl text-5xl font-black outline-none border-none focus:ring-8 focus:ring-blue-50 transition-all" />
-          </div>
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><CalendarDays className="w-4 h-4 text-blue-500" /> 存期 / Tenor</label>
-            <div className="grid grid-cols-4 gap-2 h-full pb-2">
-              {['1m', '3m', '6m', '12m'].map(m => (
-                <button key={m} onClick={() => setTenor(m)} className={`rounded-2xl text-sm font-black transition-all border-2 ${tenor === m ? 'bg-blue-600 text-white border-blue-600 shadow-xl' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{m.toUpperCase()}</button>
-              ))}
-            </div>
-          </div>
-        </section>
- 
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="relative flex-1 min-w-[300px]">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-            <input type="text" placeholder={t.searchPlace} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-16 pr-8 py-5 bg-white border border-slate-200 rounded-[2rem] font-bold outline-none shadow-sm focus:border-blue-500 transition-all text-lg" />
-          </div>
-          <div className="flex bg-white p-1.5 rounded-[1.8rem] border border-slate-200 shadow-sm shrink-0">
-            {[['all', t.all], ['trad', t.trad], ['virt', t.virt]].map(([val, label]) => (
-              <button key={val} onClick={() => setFilterType(val)} className={`px-7 py-3 rounded-2xl text-xs font-black transition-all ${filterType === val ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>{label}</button>
-            ))}
-          </div>
-          <div className="bg-white p-1.5 rounded-[1.8rem] border border-slate-200 shadow-sm flex items-center gap-2 px-4 shrink-0">
-            <SortAsc className="w-4 h-4 text-blue-500" />
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="bg-transparent font-black text-xs outline-none cursor-pointer text-slate-600 uppercase">
-              <option value="stockCode">Code</option>
-              <option value="rate">Rate</option>
-            </select>
           </div>
         </div>
- 
-        <div className="grid gap-6">
-          {displayed.map(bank => {
-            const r = bank.rates?.HKD?.[tenor];
-            const hasR = r != null && r > 0;
-            const belowMin = amount < bank.minDeposit;
-            return (
-              <div key={bank.id} className={`bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 flex flex-wrap items-center justify-between gap-8 transition-all ${belowMin ? 'opacity-40 grayscale pointer-events-none' : 'hover:shadow-2xl hover:-translate-y-1 group'}`}>
-                <div className="flex items-center gap-8 min-0">
-                  <div className="w-20 h-20 rounded-[1.8rem] bg-slate-50 border border-slate-100 p-3 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-sm">
-                    <img src={`https://www.google.com/s2/favicons?sz=128&domain=${bank.domain}`} className="w-full h-full object-contain" onError={e => e.target.style.display = 'none'} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-2xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">{bank.name}</h3>
-                      <span className="text-[10px] font-black bg-slate-100 text-slate-400 px-2 py-0.5 rounded tracking-widest uppercase">{bank.stockCode}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${bank.color}`}>{bank.offer}</span>
-                      <span className="text-[10px] text-slate-400 font-bold bg-slate-50 px-2 py-1 rounded-full uppercase border">Min: HK${bank.minDeposit.toLocaleString()}</span>
-                      {bank.lastUpdated && <span className="text-[10px] text-slate-300 flex items-center gap-1 font-bold ml-2 uppercase"><Activity className="w-3 h-3 text-emerald-400" /> {bank.lastUpdated}</span>}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-12 ml-auto">
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t.rateLabel}</p>
-                    <p className={`text-5xl font-black tabular-nums leading-none tracking-tighter ${hasR ? 'text-slate-900' : 'text-slate-100'}`}>{hasR ? `${r.toFixed(3)}%` : t.notAvailable}</p>
-                  </div>
-                  <div className="text-right min-w-[160px]">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{t.interestLabel}</p>
-                    <p className={`text-3xl font-black tabular-nums leading-none ${hasR ? 'text-emerald-600' : 'text-slate-100'}`}>{hasR ? `+HK$${interest(r).toLocaleString()}` : '─'}</p>
-                  </div>
-                  <a href={bank.url} target="_blank" rel="noreferrer" className="p-6 rounded-[1.8rem] bg-slate-50 text-slate-300 hover:bg-blue-50 hover:text-blue-500 transition-all hidden lg:flex shrink-0 shadow-sm"><ExternalLink className="w-6 h-6" /></a>
+      </nav>
+
+      <main className="max-w-7xl mx-auto px-4 pt-8">
+        <div className="grid grid-cols-12 gap-6">
+          
+          {/* Main Content Area */}
+          <div className="col-span-12 lg:col-span-9 space-y-6">
+            
+            {/* Dashboard Controls */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-wrap gap-8 items-end">
+              <div className="space-y-2 flex-1 min-w-[240px]">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Wallet size={14} className="text-blue-500" /> {t.amountLabel}
+                </label>
+                <div className="flex items-center border-b-2 border-slate-100 focus-within:border-blue-500 transition-colors pb-1">
+                  <span className="text-2xl font-black text-slate-300 mr-2">HK$</span>
+                  <input 
+                    type="number" 
+                    value={amount} 
+                    onChange={e => setAmount(Number(e.target.value))} 
+                    className="w-full bg-transparent text-4xl font-black outline-none tabular-nums" 
+                  />
                 </div>
               </div>
-            );
-          })}
-        </div>
 
-        <footer className="mt-20 p-12 bg-slate-900 rounded-[3rem] text-slate-500 text-xs border border-slate-800 space-y-4 shadow-2xl">
-          <div className="flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm"><ShieldCheck className="w-5 h-5 text-blue-500" /> Market Compliance Notice</div>
-          <p>• 數據根據用戶提供之最新利率表（CSV）同步更新，確保 100% 準確對齊。點擊右側外部連結可直達各銀行官網驗證。實際利率以銀行最後批核為準。</p>
-        </footer>
-      </div>
+              <div className="space-y-2 w-full md:w-auto">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <CalendarDays size={14} className="text-blue-500" /> {t.tenorLabel}
+                </label>
+                <div className="flex bg-slate-50 p-1 rounded-2xl gap-1">
+                  {['3m', '6m', '12m'].map(m => (
+                    <button 
+                      key={m} 
+                      onClick={() => setTenor(m)} 
+                      className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${tenor === m ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}
+                    >
+                      {m.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="relative flex-1 min-w-[300px]">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <input 
+                  type="text" 
+                  placeholder={t.searchPlace} 
+                  value={searchQuery} 
+                  onChange={e => setSearchQuery(e.target.value)} 
+                  className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all shadow-sm" 
+                />
+              </div>
+              <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                {[['all', t.all], ['trad', t.trad], ['virt', t.virt]].map(([v, l]) => (
+                  <button key={v} onClick={() => setFilterType(v)} className={`px-6 py-2 text-xs font-black rounded-xl transition-all ${filterType === v ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-50'}`}>{l}</button>
+                ))}
+              </div>
+              <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm items-center px-4 gap-3">
+                <SortAsc size={16} className="text-blue-500" />
+                <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="bg-transparent text-xs font-black outline-none cursor-pointer text-slate-600 uppercase">
+                  <option value="rate">{t.sortRate}</option>
+                  <option value="stock">{t.sortCode}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Compact Bank List */}
+            <div className="grid gap-3">
+              {sortedBanks.map(bank => {
+                const r = bank.rates?.HKD?.[tenor];
+                const hasR = r != null && r > 0;
+                const belowMin = amount < bank.minDeposit;
+
+                return (
+                  <div 
+                    key={bank.id} 
+                    className={`group bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center gap-4 transition-all hover:shadow-lg hover:border-blue-200 ${belowMin ? 'opacity-40 grayscale' : ''}`}
+                  >
+                    <div className={`w-1.5 h-12 rounded-full ${bank.color} opacity-80 group-hover:opacity-100 transition-opacity`}></div>
+                    
+                    <div className="flex items-center gap-4 min-w-[320px] flex-1">
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 p-2 border border-slate-100 flex items-center justify-center shrink-0">
+                        <img 
+                          src={`https://www.google.com/s2/favicons?sz=64&domain=${bank.domain}`} 
+                          className="w-full h-full object-contain" 
+                          alt=""
+                          onError={e => e.target.style.display = 'none'} 
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-lg tracking-tight text-slate-800">{bank.name[lK]}</h3>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded uppercase tracking-tighter">{bank.stockCode}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 uppercase ${bank.fundType === 'new' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                            {bank.fundType === 'new' ? t.newFund : t.existingFund}
+                          </span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full flex items-center gap-1 uppercase">
+                            {bank.channel === 'mobile' ? <Smartphone size={10} /> : <MousePointer2 size={10} />}
+                            {bank.channel === 'mobile' ? t.mobile : t.online}
+                          </span>
+                          <span className="text-[9px] font-bold text-slate-400 flex items-center gap-1 uppercase ml-1">
+                            <ShieldCheck size={11} className="text-slate-300" /> {t.minDeposit}: HK${bank.minDeposit.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-8 md:gap-12 ml-auto">
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t.rateLabel}</p>
+                        <p className={`text-3xl font-black tabular-nums leading-none ${hasR ? 'text-slate-900' : 'text-slate-100'}`}>
+                          {hasR ? `${r.toFixed(3)}%` : '--'}
+                        </p>
+                      </div>
+                      <div className="text-right min-w-[140px]">
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t.interestLabel}</p>
+                        <p className={`text-2xl font-black tabular-nums leading-none ${hasR ? 'text-emerald-500' : 'text-slate-100'}`}>
+                          {hasR ? `+${calcInt(r).toLocaleString()}` : '--'}
+                        </p>
+                      </div>
+                      <a href={bank.url} target="_blank" rel="noreferrer" className="p-3 bg-slate-50 text-slate-300 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm shrink-0">
+                        <ArrowUpRight size={20} />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Ad Slot */}
+            <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-4 flex items-center justify-center min-h-[120px]">
+              <div className="text-center">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-2">{t.adLabel}</p>
+                <div className="w-full h-full bg-slate-50 rounded animate-pulse flex items-center justify-center">
+                   {/* Place AdSense Code Snippet Here */}
+                   <span className="text-xs text-slate-300 font-medium">Responsive Banner Ad Slot</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Updated Footer */}
+            <footer className="mt-12 p-10 bg-white rounded-3xl border border-slate-200 space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-slate-900 rotate-12">
+                <ShieldCheck size={160} />
+              </div>
+              <div className="flex items-center gap-3 text-slate-900 font-black uppercase tracking-widest text-sm">
+                <ShieldCheck size={20} className="text-blue-500" /> 
+                Compliance & Transparency
+              </div>
+              <div className="grid md:grid-cols-2 gap-8 text-xs font-bold text-slate-400 leading-relaxed uppercase">
+                <p>• {t.lastUpdateBy}{lastSync || t.notAvailable}</p>
+                <p>• {lang === 'zh_TW' ? '新資金優惠通常要求存款金額需為過去一段時間內的新增結餘。' : 'New fund offers typically require the amount to be fresh balance.'}</p>
+              </div>
+              <div className="pt-6 border-t border-slate-100 flex justify-between items-center text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                <span>Powered by HK FD Tracker Pro</span>
+                <span>Est. 2026</span>
+              </div>
+            </footer>
+          </div>
+
+          {/* Right Sidebar Ad Slot */}
+          <aside className="hidden lg:block lg:col-span-3">
+            <div className="sticky top-24 space-y-6">
+              <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-4 flex flex-col items-center min-h-[600px] shadow-sm">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-4">{t.adLabel}</p>
+                <div className="w-full flex-1 bg-slate-50 rounded border border-slate-100 flex items-center justify-center text-center p-4">
+                  {/* Place AdSense Skyscraper Code Snippet Here */}
+                  <span className="text-xs text-slate-300 font-medium leading-relaxed">
+                    Vertical Skyscraper Ad Slot<br/>
+                    (300x600)
+                  </span>
+                </div>
+              </div>
+              
+              {/* Optional: Small Info Box below sidebar ad */}
+              <div className="bg-blue-600 rounded-3xl p-6 text-white shadow-xl shadow-blue-100">
+                <Info size={24} className="mb-4" />
+                <h4 className="font-black text-sm uppercase tracking-widest mb-2">Pro Tip</h4>
+                <p className="text-xs font-bold leading-relaxed opacity-90 uppercase">
+                  Always check if you qualify for "New Fund" status to unlock the highest rates.
+                </p>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </main>
     </div>
   );
 }
