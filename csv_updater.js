@@ -1,14 +1,8 @@
 import fs from 'fs';
 import admin from 'firebase-admin';
 
-/**
- * csv_updater.js
- * 💡 邏輯：讀取專案根目錄的 rates.csv，解析後直接同步至 Firestore。
- * 優點：100% 準確，不受銀行網頁改版影響。
- */
-
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-  console.error('❌ 缺失環境變數: FIREBASE_SERVICE_ACCOUNT');
+  console.error('❌ FIREBASE_SERVICE_ACCOUNT 缺失');
   process.exit(1);
 }
 
@@ -19,50 +13,48 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const APP_ID = 'hk-fd-tracker-pro';
 
-async function updateFromCSV() {
-  const filePath = './rates.csv';
-  
-  if (!fs.existsSync(filePath)) {
-    console.error('❌ 找不到 rates.csv 檔案');
-    return;
-  }
-
-  const content = fs.readFileSync(filePath, 'utf8');
-  const lines = content.split('\n').filter(line => line.trim() !== '');
-  
-  // 跳過標頭行 (id,1m,3m,6m,12m)
-  const dataRows = lines.slice(1);
-  const now = new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong' });
-
-  console.log(`🚀 開始從 CSV 更新 ${dataRows.length} 間銀行數據...`);
-
-  for (const row of dataRows) {
-    const [id, m1, m3, m6, m12] = row.split(',').map(s => s.trim());
-    
-    if (!id) continue;
-
-    const rates = {
-      HKD: {
-        '1m': m1 !== '0.0' ? parseFloat(m1) : null,
-        '3m': m3 !== '0.0' ? parseFloat(m3) : null,
-        '6m': m6 !== '0.0' ? parseFloat(m6) : null,
-        '12m': m12 !== '0.0' ? parseFloat(m12) : null
-      }
-    };
-
-    try {
-      await db.doc(`artifacts/${APP_ID}/public/data/live_rates/${id}`).set({
-        id,
-        rates,
-        lastUpdated: `CSV: ${now}`
-      }, { merge: true });
-      console.log(`   ✅ [${id}] 已更新`);
-    } catch (err) {
-      console.error(`   ❌ [${id}] 更新失敗: ${err.message}`);
+async function sync() {
+  try {
+    const file = './rates.csv';
+    if (!fs.existsSync(file)) {
+      console.error('❌ 找不到 rates.csv');
+      process.exit(1);
     }
-  }
 
-  console.log('\n🎉 CSV 同步程序結束。');
+    const lines = fs.readFileSync(file, 'utf8').split('\n').filter(l => l.trim());
+    const now = new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong' });
+
+    console.log(`🚀 開始同步 CSV 數據 (${lines.length - 1} 間銀行)...`);
+
+    for (const line of lines.slice(1)) {
+      const parts = line.split(',');
+      if (parts.length < 5) continue;
+      
+      const [id, m1, m3, m6, m12] = parts.map(s => s.trim());
+      if (!id) continue;
+
+      const rates = {
+        HKD: {
+          '1m': parseFloat(m1) > 0 ? parseFloat(m1) : null,
+          '3m': parseFloat(m3) > 0 ? parseFloat(m3) : null,
+          '6m': parseFloat(m6) > 0 ? parseFloat(m6) : null,
+          '12m': parseFloat(m12) > 0 ? parseFloat(m12) : null
+        }
+      };
+
+      await db.doc(`artifacts/${APP_ID}/public/data/live_rates/${id}`).set({
+        id, rates, lastUpdated: `CSV: ${now}`
+      }, { merge: true });
+      console.log(`   ✅ [${id}] 同步成功`);
+    }
+
+    console.log('\n🎉 所有數據已成功推送到 Firestore！');
+    // 💡 關鍵：強制結束 Node 程序，否則 GitHub Action 會一直轉圈圈
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ 執行出錯:', err);
+    process.exit(1);
+  }
 }
 
-updateFromCSV();
+sync();

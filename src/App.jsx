@@ -32,11 +32,11 @@ const T = {
     title: '香港定期存款追蹤器',
     subtitle: '專業級定存利率監控系統',
     all: '全部銀行', trad: '傳統大行', virt: '虛擬銀行',
-    searchPlace: '搜尋銀行、上市編號或帳戶等級…',
+    searchPlace: '搜尋銀行、編號或帳戶等級…',
     sortRate: '按利率排序', sortCode: '按編號排序',
     interestLabel: '預計利息收益', rateLabel: '年利率 p.a.',
     minDeposit: '起存額', amountLabel: '預計存款金額 (HKD)',
-    notAvailable: '暫無提供', loading: '數據同步中…', updated: '更新於', syncing: '實時監控中'
+    notAvailable: '暫無提供', loading: '連接數據中…', updated: '數據更新', syncing: '實時同步中'
   },
   en: {
     title: 'HK FD Tracker Pro',
@@ -50,6 +50,7 @@ const T = {
   },
 };
  
+// 💡 INITIAL_BANKS 必須與 rates.csv 中的 ID 完全對應
 const INITIAL_BANKS = [
   { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-900 text-white' },
   { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-700 text-white' },
@@ -83,30 +84,40 @@ export default function App() {
   const [sortBy, setSortBy] = useState('stockCode');
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [lastSync, setLastSync] = useState(null);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [syncedCount, setSyncedCount] = useState(0);
  
   const t = T[lang];
  
+  // 匿名登入
   useEffect(() => {
     if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      if (u) setUser(u);
-      else signInAnonymously(auth).catch(console.error);
+    const unsub = onAuthStateChanged(auth, u => {
+      if (u) {
+        setUser(u);
+        console.log("✅ Firebase Auth: Success");
+      } else {
+        signInAnonymously(auth).catch(err => console.error("❌ Auth Error:", err));
+      }
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
  
+  // 實時數據監聽
   useEffect(() => {
     if (!user || !db) return;
+    
+    console.log("🔌 Initializing Listeners...");
     const unsubs = INITIAL_BANKS.map(bank => {
       const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rates', bank.id);
       return onSnapshot(ref, snap => {
         if (snap.exists()) {
           const data = snap.data();
           setBanks(prev => prev.map(b => b.id === bank.id ? { ...b, rates: data.rates ?? {}, lastUpdated: data.lastUpdated } : b));
-          setIsDataLoaded(true); // 只要有任何數據進來，就標記為已加載
+          setSyncedCount(prev => prev + 1);
           if (data.lastUpdated) setLastSync(data.lastUpdated);
         }
+      }, err => {
+        console.error(`❌ Snapshot Error for ${bank.id}:`, err.message);
       });
     });
     return () => unsubs.forEach(u => u());
@@ -146,9 +157,9 @@ export default function App() {
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isDataLoaded ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                <span className={`w-2 h-2 rounded-full bg-current ${isDataLoaded ? 'animate-pulse' : ''}`}></span>
-                {isDataLoaded ? t.syncing : 'Connecting...'}
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${syncedCount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`w-2 h-2 rounded-full bg-current ${syncedCount > 0 ? 'animate-pulse' : ''}`}></span>
+                {syncedCount > 0 ? t.syncing : 'Connecting...'}
               </span>
               <span className="flex items-center gap-1 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded-md tracking-tighter uppercase shadow-sm"><Database className="w-3 h-3" /> Firestore Linked</span>
               {lastSync && <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter"><Clock className="w-3 h-3 inline mr-1" /> {lastSync}</span>}
