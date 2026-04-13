@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
  
 // ── Firebase Config ──────────────────────────────────────────
-// 這裡使用的是您的正式 API Key，確保網頁能合法讀取雲端數據
 const firebaseConfig = {
   apiKey: "AIzaSyALK4TY5etUnEvBTqfvH6d0O36Rt3UuYIM", 
   authDomain: "hk-bank-tracker.firebaseapp.com",
@@ -28,7 +27,6 @@ try {
  
 const APP_ID = 'hk-fd-tracker-pro'; 
  
-// ── 多語言翻譯 ────────────────────────────────────────────────
 const T = {
   zh_TW: {
     title: '香港定期存款追蹤器',
@@ -52,30 +50,23 @@ const T = {
   },
 };
  
-// ── 銀行初始設定 (對應您的 table.csv 與最新 URL) ─────────────────
 const INITIAL_BANKS = [
   { id: 'hsbc_elite', name: '滙豐 卓越理財尊尚', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-900 text-white' },
   { id: 'hsbc_premier', name: '滙豐 卓越理財', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金優惠', color: 'bg-red-700 text-white' },
   { id: 'hsbc_one', name: '滙豐 HSBC One', stockCode: '0005', domain: 'hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: {}, minDeposit: 10000, type: 'trad', offer: '網上優惠', color: 'bg-red-50 text-red-700 border border-red-100' },
-  
   { id: 'hangseng_prestige', name: '恒生 優越理財', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', offer: '新資金特惠', color: 'bg-green-800 text-white' },
   { id: 'hangseng_standard', name: '恒生 一般帳戶', stockCode: '0011', domain: 'hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: {}, minDeposit: 10000, type: 'trad', offer: '一般優惠', color: 'bg-green-100 text-green-800 border' },
-  
   { id: 'boc_wealth', name: '中銀理財', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 1000000, type: 'trad', offer: '特選客戶', color: 'bg-red-800 text-white' },
   { id: 'boc_standard', name: '中銀 一般客戶', stockCode: '2388', domain: 'bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: {}, minDeposit: 10000, type: 'trad', offer: '掛牌利率', color: 'bg-red-50 text-red-700 border' },
-  
   { id: 'citi_gold', name: '花旗 Citigold', stockCode: 'US:C', domain: 'citibank.com.hk', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', rates: {}, minDeposit: 50000, type: 'trad', offer: '新客戶優惠', color: 'bg-blue-700 text-white shadow-lg' },
-  
   { id: 'sc_priority', name: '渣打 優先理財', stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1000000, type: 'trad', offer: '優先理財', color: 'bg-blue-800 text-white' },
   { id: 'sc_standard', name: '渣打 一般客戶', stockCode: '2888', domain: 'sc.com', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', rates: {}, minDeposit: 1, type: 'trad', offer: '網上優惠', color: 'bg-blue-50 text-blue-700 border border-blue-100' },
-  
   { id: 'bea_supreme', name: '東亞 至尊理財', stockCode: '0023', domain: 'hkbea.com', url: 'https://www.hkbea.com/html/en/bea-personal-banking-supremegold-time-deposit.html', rates: {}, minDeposit: 100000, type: 'trad', offer: '新客戶特惠', color: 'bg-red-800 text-white' },
   { id: 'icbc_elite', name: '工銀亞洲 理財金', stockCode: '1398', domain: 'icbcasia.com', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', rates: {}, minDeposit: 3000000, type: 'trad', offer: 'Wealth Mgt', color: 'bg-red-700 text-white' },
   { id: 'ccb_prestige', name: '建行亞洲 貴賓理財', stockCode: '0939', domain: 'asia.ccb.com', url: 'https://www.asia.ccb.com/hongkong/personal/accounts/dep_rates.html', rates: {}, minDeposit: 1000000, type: 'trad', offer: '掛牌利率', color: 'bg-blue-900 text-white' },
   { id: 'public_online', name: '大眾銀行 網上定存', stockCode: '0626', domain: 'publicbank.com.hk', url: 'https://www.publicbank.com.hk/en/usefultools/rates/depositinterestrates', rates: {}, minDeposit: 10000, type: 'trad', offer: 'Board Rate', color: 'bg-red-50 text-red-800 border border-red-100' },
-
   { id: 'za', name: 'ZA Bank (眾安)', stockCode: 'VB01', domain: 'za.group', url: 'https://bank.za.group/hk/deposit', rates: {}, minDeposit: 1, type: 'virt', offer: '活期+定期', color: 'bg-teal-600 text-white' },
-  { id: 'fusion', name: '富融 Fusion', stockCode: 'VB02', domain: 'fusionbank.com', url: 'https://www.fusionbank.com/deposit.html?lang=tc', rates: {}, minDeposit: 1000000, type: 'virt', offer: '高額階梯', color: 'bg-purple-600 text-white' },
+  { id: 'fusion', name: '富融 Fusion', stockCode: 'VB02', domain: 'fusionbank.com', url: 'https://www.fusionbank.com/deposit.html?lang=tc', rates: {}, minDeposit: 1000000, type: 'virt', offer: '階梯利率', color: 'bg-purple-600 text-white' },
   { id: 'mox', name: 'Mox Bank', stockCode: 'VB04', domain: 'mox.com', url: 'https://mox.com/zh/promotions/time-deposit/', rates: {}, minDeposit: 1, type: 'virt', offer: 'Mox定存', color: 'bg-black text-white' },
   { id: 'paob', name: '平安壹賬通 PAOB', stockCode: 'VB05', domain: 'paob.com.hk', url: 'https://www.paob.com.hk/tc/deposit.html', rates: {}, minDeposit: 100, type: 'virt', offer: '保證回報', color: 'bg-orange-50 text-orange-800 border' },
   { id: 'livi', name: 'Livi Bank', stockCode: 'VB03', domain: 'livibank.com', url: 'https://www.livibank.com/features/livisave.html', rates: {}, minDeposit: 1, type: 'virt', offer: 'liviSave', color: 'bg-blue-600 text-white' },
@@ -92,11 +83,10 @@ export default function App() {
   const [sortBy, setSortBy] = useState('stockCode');
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [lastSync, setLastSync] = useState(null);
-  const [syncedCount, setSyncedCount] = useState(0);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
  
   const t = T[lang];
  
-  // ── 匿名身分驗證 ──
   useEffect(() => {
     if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, u => {
@@ -106,7 +96,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
  
-  // ── 實時監聽 Firestore (由 CSV Updater 更新) ──
   useEffect(() => {
     if (!user || !db) return;
     const unsubs = INITIAL_BANKS.map(bank => {
@@ -115,7 +104,7 @@ export default function App() {
         if (snap.exists()) {
           const data = snap.data();
           setBanks(prev => prev.map(b => b.id === bank.id ? { ...b, rates: data.rates ?? {}, lastUpdated: data.lastUpdated } : b));
-          setSyncedCount(prev => prev + 1);
+          setIsDataLoaded(true); // 只要有任何數據進來，就標記為已加載
           if (data.lastUpdated) setLastSync(data.lastUpdated);
         }
       });
@@ -123,7 +112,6 @@ export default function App() {
     return () => unsubs.forEach(u => u());
   }, [user]);
  
-  // ── 過濾與排序邏輯 ──
   const displayed = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return banks
@@ -155,13 +143,12 @@ export default function App() {
     <div className="min-h-screen bg-[#FDFDFF] text-slate-900 p-4 md:p-10 font-sans antialiased">
       <div className="max-w-5xl mx-auto space-y-8">
         
-        {/* Header Section */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${syncedCount > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                <span className={`w-2 h-2 rounded-full bg-current ${syncedCount > 0 ? 'animate-pulse' : ''}`}></span>
-                {syncedCount > 0 ? t.syncing : 'Connecting...'}
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isDataLoaded ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`w-2 h-2 rounded-full bg-current ${isDataLoaded ? 'animate-pulse' : ''}`}></span>
+                {isDataLoaded ? t.syncing : 'Connecting...'}
               </span>
               <span className="flex items-center gap-1 bg-slate-900 text-white text-[9px] font-black px-2 py-1 rounded-md tracking-tighter uppercase shadow-sm"><Database className="w-3 h-3" /> Firestore Linked</span>
               {lastSync && <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter"><Clock className="w-3 h-3 inline mr-1" /> {lastSync}</span>}
@@ -176,7 +163,6 @@ export default function App() {
           </div>
         </header>
 
-        {/* Input Configuration */}
         <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 shadow-sm grid md:grid-cols-2 gap-10">
           <div className="space-y-3">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><Wallet className="w-4 h-4 text-emerald-500" /> {t.amountLabel}</label>
@@ -192,7 +178,6 @@ export default function App() {
           </div>
         </section>
  
-        {/* Filters and Sorting */}
         <div className="flex flex-wrap gap-4 items-center">
           <div className="relative flex-1 min-w-[300px]">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
@@ -212,7 +197,6 @@ export default function App() {
           </div>
         </div>
  
-        {/* Results List */}
         <div className="grid gap-6">
           {displayed.map(bank => {
             const r = bank.rates?.HKD?.[tenor];
@@ -220,7 +204,7 @@ export default function App() {
             const belowMin = amount < bank.minDeposit;
             return (
               <div key={bank.id} className={`bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-10 flex flex-wrap items-center justify-between gap-8 transition-all ${belowMin ? 'opacity-40 grayscale pointer-events-none' : 'hover:shadow-2xl hover:-translate-y-1 group'}`}>
-                <div className="flex items-center gap-8 min-w-0">
+                <div className="flex items-center gap-8 min-0">
                   <div className="w-20 h-20 rounded-[1.8rem] bg-slate-50 border border-slate-100 p-3 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-sm">
                     <img src={`https://www.google.com/s2/favicons?sz=128&domain=${bank.domain}`} className="w-full h-full object-contain" onError={e => e.target.style.display = 'none'} />
                   </div>
@@ -252,7 +236,6 @@ export default function App() {
           })}
         </div>
 
-        {/* Compliance Footer */}
         <footer className="mt-20 p-12 bg-slate-900 rounded-[3rem] text-slate-500 text-xs border border-slate-800 space-y-4 shadow-2xl">
           <div className="flex items-center gap-2 text-white font-black uppercase tracking-widest text-sm"><ShieldCheck className="w-5 h-5 text-blue-500" /> Market Compliance Notice</div>
           <p>• 數據根據用戶提供之最新利率表（CSV）同步更新，確保 100% 準確對齊。點擊右側外部連結可直達各銀行官網驗證。實際利率以銀行最後批核為準。</p>
