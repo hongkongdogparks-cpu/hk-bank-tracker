@@ -3,8 +3,8 @@ name: Sync Rates from CSV
 on:
   push:
     paths:
-      - 'rates.csv'         # 只要偵測到 rates.csv 檔案有變動並 Push，就會觸發更新
-  workflow_dispatch:        # 允許您在 GitHub 介面手動點擊按鈕執行
+      - 'rates.csv'         # 僅監控根目錄下的 rates.csv
+  workflow_dispatch:        # 允許在 GitHub UI 手動執行
 
 jobs:
   update:
