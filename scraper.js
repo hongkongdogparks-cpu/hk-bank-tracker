@@ -2,15 +2,15 @@ import puppeteer from 'puppeteer-core';
 import admin from 'firebase-admin';
 
 /**
- * scraper.js - 2026 終極穩定版 (官網優先 + U Lifestyle 備援)
- * 💡 策略：
- * 1. 首先嘗試從各大銀行官網抓取最即時數據。
- * 2. 若官網抓取失敗，則啟動 Fallback 機制，前往 U Lifestyle 匯總頁提取數據。
- * 3. 確保數據不留白，提供 100% 可用率。
+ * scraper.js - 2026 全港銀行終極同步版
+ * 💡 功能亮點：
+ * 1. 採用用戶提供的精確 URL 集合。
+ * 2. 支援 ZA 的橫向表格（存期在首行）與 BOC/Fusion 的縱向表格（存期在首列）。
+ * 3. 內置 U Lifestyle Fallback 備援機制，確保官網改版時數據不中斷。
  */
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-  console.error('❌ FIREBASE_SERVICE_ACCOUNT 缺失');
+  console.error('❌ 缺失環境變數: FIREBASE_SERVICE_ACCOUNT');
   process.exit(1);
 }
 
@@ -21,9 +21,9 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const APP_ID = 'hk-fd-tracker-pro';
 
-const FALLBACK_URL = "https://hk.ulifestyle.com.hk/topic/detail/20053976/%E9%A6%99%E6%B8%AF%E9%8A%80%E8%A1%8C%E6%B8%AF%E5%85%83%E5%AE%9A%E6%9C%9F%E5%AD%98%E6%AC%BE%E5%88%A9%E7%8E%87%E6%AF%94%E8%BC%83-%E6%9C%80%E6%96%B0%E6%B8%AF%E5%85%83%E5%AE%9A%E6%9C%9F%E高%81%AF%E4%B9%8B%E9%81%B8-%E6%AF%8F%E6%97%A5%E6%9B%B4%E6%96%B0/6";
+const FALLBACK_URL = "https://hk.ulifestyle.com.hk/topic/detail/20053976/%E9%A6%99%E6%B8%AF%E9%8A%80%E8%A1%8C%E6%B8%AF%E5%85%83%E5%AE%9A%E6%9C%9F%E5%AD%98%E6%AC%BE%E5%88%A9%E7%8E%87%E6%AF%94%E8%BC%83-%E6%9C%80%E6%96%B0%E6%B8%AF%E5%85%83%E5%AE%9A%E6%9C%9F%E9%AB%98%E6%81%AF%E4%B9%8B%E9%81%B8-%E6%AF%8F%E6%97%A5%E6%9B%B4%E6%96%B0/6";
 
-// ── 注入瀏覽器的智慧解析引擎 ─────────────────────────────────────
+// ── 注入瀏覽器的解析引擎 ───────────────────────────────────────
 
 const HELPERS = `
   const TENOR_MAP = {
@@ -51,131 +51,88 @@ const HELPERS = `
     return null;
   }
 
-  function deepTableParser(targetTier) {
-    const finalRates = {};
+  function extractAnyTable(targetLabel) {
+    const results = {};
     const tables = document.querySelectorAll('table');
     for (const table of tables) {
       const rows = Array.from(table.querySelectorAll('tr'));
       if (rows.length < 2) continue;
+      
+      const fullText = table.innerText;
+      if (targetLabel && !fullText.includes(targetLabel)) continue;
+
       const firstRow = Array.from(rows[0].querySelectorAll('th,td')).map(c => c.innerText.trim());
       const headerTenors = firstRow.map(normalizeTenor);
+      
       if (headerTenors.some(Boolean)) {
+        // 模式 A: 存期在首行 (如 ZA)
         for (let i = 1; i < rows.length; i++) {
           const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.innerText.trim());
-          if (cells[0].toLowerCase().includes(targetTier.toLowerCase()) || targetTier.toLowerCase().includes(cells[0].toLowerCase()) || targetTier === 'Global') {
+          if (cells[0].includes(targetLabel) || targetLabel.includes(cells[0])) {
             headerTenors.forEach((tenor, idx) => {
               if (tenor && cells[idx]) {
                 const r = parseRate(cells[idx]);
-                if (r !== null) finalRates[tenor] = r;
+                if (r !== null) results[tenor] = r;
               }
             });
           }
         }
-      }
-      if (Object.keys(finalRates).length === 0) {
-        rows.forEach(row => {
+      } else {
+        // 模式 B: 存期在第一列 (如 BOC, Fusion)
+        for (const row of rows) {
           const cells = Array.from(row.querySelectorAll('td,th')).map(c => c.innerText.trim());
-          const firstCellTenor = normalizeTenor(cells[0]);
-          if (firstCellTenor) {
+          const tenor = normalizeTenor(cells[0]);
+          if (tenor) {
             for (let j = cells.length - 1; j >= 1; j--) {
               const r = parseRate(cells[j]);
-              if (r !== null) { if (!finalRates[firstCellTenor] || r > finalRates[firstCellTenor]) finalRates[firstCellTenor] = r; break; }
+              if (r !== null) { results[tenor] = r; break; }
             }
           }
-        });
-      }
-      if (Object.keys(finalRates).length > 0) break;
-    }
-    return finalRates;
-  }
-
-  function textRegionScanner(tierName) {
-    const body = document.body.innerText.replace(/\\s+/g, ' ');
-    const idx = body.toLowerCase().indexOf(tierName.toLowerCase());
-    if (idx === -1) return {};
-    const block = body.substring(idx, idx + 5000);
-    const results = {};
-    for (const [key, regexes] of Object.entries(TENOR_MAP)) {
-      for (const re of regexes) {
-        const match = block.match(new RegExp(re.source, 'i'));
-        if (match) {
-          const area = block.substring(match.index, match.index + 500);
-          const r = parseRate(area);
-          if (r !== null) { results[key] = r; break; }
         }
       }
+      if (Object.keys(results).length > 0) break;
     }
     return results;
   }
-`;
 
-// ── Fallback 解析引擎 (針對 U Lifestyle) ──────────────────────────
-
-async function scrapeFallbackSource(browser, failedBankIds) {
-  if (failedBankIds.length === 0) return;
-  console.log(`\n🚨 啟動 Fallback 機制: 嘗試從 U Lifestyle 補全 ${failedBankIds.length} 間銀行數據...`);
-  
-  const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
-  
-  try {
-    await page.goto(FALLBACK_URL, { waitUntil: 'networkidle2', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 5000));
-
-    // 別名表：將 U Lifestyle 上的文字對應到系統 ID
-    const aliasMap = {
-      'hsbc_elite': '匯豐', 'hsbc_premier': '匯豐', 'hsbc_one': 'HSBC One',
-      'hangseng_prestige': '恒生', 'hangseng_standard': '恒生',
-      'boc_wealth': '中銀', 'boc_standard': '中銀',
-      'sc_priority': '渣打', 'sc_standard': '渣打',
-      'citi_gold': '花旗', 'citi_plus': '花旗',
-      'bea_supreme': '東亞', 'icbc_elite': '工銀', 'ccb_prestige': '建行',
-      'za': 'ZA Bank', 'fusion': '富融', 'mox': 'Mox', 'paob': '平安壹賬通',
-      'livi': 'Livi', 'welab': 'WeLab', 'ant': '螞蟻', 'airstar': '天星'
-    };
-
-    for (const bankId of failedBankIds) {
-      const searchTerm = aliasMap[bankId];
-      if (!searchTerm) continue;
-
-      const rates = await page.evaluate((term, helpers) => {
-        eval(helpers);
-        return textRegionScanner(term);
-      }, searchTerm, HELPERS);
-
-      if (rates && Object.keys(rates).length > 0) {
-        console.log(`   💡 [${bankId}] 已通過 Fallback 補全數據`);
-        await db.doc(`artifacts/${APP_ID}/public/data/live_rates/${bankId}`).set({
-          id: bankId, rates: { HKD: rates }, lastUpdated: `Fallback: ${new Date().toLocaleString('zh-HK')}`
-        }, { merge: true });
+  function extractByText(tierName) {
+    const body = document.body.innerText.replace(/\\s+/g, ' ');
+    const tierIdx = body.toLowerCase().indexOf(tierName.toLowerCase());
+    if (tierIdx === -1) return {};
+    const block = body.substring(tierIdx, tierIdx + 6000);
+    const rates = {};
+    for (const [key, regexes] of Object.entries(TENOR_MAP)) {
+      for (const re of regexes) {
+        const m = block.match(new RegExp(re.source, 'i'));
+        if (m) {
+          const area = block.substring(m.index, m.index + 600);
+          const r = parseRate(area);
+          if (r !== null) { rates[key] = r; break; }
+        }
       }
     }
-  } catch (err) {
-    console.error(`   ⚠️ Fallback 抓取失敗: ${err.message}`);
-  } finally {
-    await page.close();
+    return rates;
   }
-}
+`;
 
-// ── 主抓取邏輯 ─────────────────────────────────────────────
+// ── 核心功能函數 ──────────────────────────────────────────────
 
 async function scrapeBank(browser, task, failedSet) {
   const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36');
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
   
-  console.log(`\n🔍 掃描官網: ${task.bankName}`);
-
+  console.log(`\n🔍 正在抓取官網: ${task.bankName}`);
   try {
-    const waitCond = (task.url.includes('sc.com') || task.url.includes('citibank')) ? 'domcontentloaded' : 'networkidle2';
-    await page.goto(task.url, { waitUntil: waitCond, timeout: 70000 });
-    await new Promise(r => setTimeout(r, task.extraWait || 8000));
+    const waitCond = (task.bankName.includes('SCB') || task.bankName.includes('Citi')) ? 'domcontentloaded' : 'networkidle2';
+    await page.goto(task.url, { waitUntil: waitCond, timeout: 95000 });
+    await new Promise(r => setTimeout(r, task.extraWait || 10000));
 
     const results = await page.evaluate((mapping, helpers) => {
       eval(helpers);
       const data = {};
       mapping.forEach(m => {
-        let rates = deepTableParser(m.tier);
-        if (!rates || Object.keys(rates).length === 0) rates = textRegionScanner(m.tier);
+        let rates = extractAnyTable(m.tier);
+        if (!rates || Object.keys(rates).length === 0) rates = extractByText(m.tier);
         data[m.id] = rates;
       });
       return data;
@@ -185,22 +142,49 @@ async function scrapeBank(browser, task, failedSet) {
     for (const item of task.mapping) {
       const rates = results[item.id];
       if (rates && Object.keys(rates).length > 0) {
-        console.log(`   ✅ [${item.id}] 官網同步成功`);
+        console.log(`   ✅ [${item.id}] 同步成功`);
         await db.doc(`artifacts/${APP_ID}/public/data/live_rates/${item.id}`).set({
           id: item.id, rates: { HKD: rates }, lastUpdated: now
         }, { merge: true });
       } else {
         failedSet.add(item.id);
-        console.warn(`   ❌ [${item.id}] 官網提取失敗，加入 Fallback 隊列`);
+        console.warn(`   ❌ [${item.id}] 提取失敗，加入 Fallback 隊列`);
       }
     }
   } catch (err) {
-    console.error(`   ⚠️ ${task.bankName} 官網超時: ${err.message}`);
+    console.error(`   ⚠️ ${task.bankName} 出錯: ${err.message}`);
     task.mapping.forEach(m => failedSet.add(m.id));
   } finally {
     await page.close();
   }
 }
+
+async function scrapeFallback(browser, failedIds) {
+  if (failedIds.length === 0) return;
+  console.log(`\n🚨 啟動 Fallback: 嘗試從 U Lifestyle 補全 ${failedIds.length} 間銀行數據...`);
+  const page = await browser.newPage();
+  try {
+    await page.goto(FALLBACK_URL, { waitUntil: 'networkidle2', timeout: 60000 });
+    const aliasMap = {
+      'hsbc_elite': '匯豐', 'hsbc_premier': '匯豐', 'hsbc_one': 'HSBC One',
+      'boc_wealth': '中銀', 'boc_standard': '中銀', 'citi_gold': '花旗',
+      'za': 'ZA Bank', 'fusion': '富融', 'livi': 'Livi', 'airstar': '天星', 'paob': '平安'
+    };
+    for (const id of failedIds) {
+      const term = aliasMap[id];
+      if (!term) continue;
+      const rates = await page.evaluate((t, h) => { eval(h); return extractByText(t); }, term, HELPERS);
+      if (rates && Object.keys(rates).length > 0) {
+        await db.doc(`artifacts/${APP_ID}/public/data/live_rates/${id}`).set({
+          id, rates: { HKD: rates }, lastUpdated: `Fallback: ${new Date().toLocaleString('zh-HK')}`
+        }, { merge: true });
+        console.log(`   💡 [${id}] 通過 Fallback 成功補全`);
+      }
+    }
+  } catch (e) { console.error(e); } finally { await page.close(); }
+}
+
+// ── 執行主流程 ───────────────────────────────────────────────
 
 async function run() {
   const browser = await puppeteer.launch({
@@ -214,25 +198,24 @@ async function run() {
   const tasks = [
     { bankName: 'HSBC Premier', url: 'https://www.hsbc.com.hk/zh-hk/premier-elite/offers/time-deposit-rate/', mapping: [{ id: 'hsbc_elite', tier: '卓越理財尊尚' }, { id: 'hsbc_premier', tier: '卓越理財' }] },
     { bankName: 'HSBC One', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', mapping: [{ id: 'hsbc_one', tier: 'HSBC One' }] },
-    { bankName: 'BOC', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', mapping: [{ id: 'boc_wealth', tier: 'Global' }, { id: 'boc_standard', tier: 'Global' }] },
-    { bankName: 'Citibank', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', extraWait: 12000, mapping: [{ id: 'citi_gold', tier: 'Citigold' }, { id: 'citi_plus', tier: 'Citi Plus' }] },
-    { bankName: 'Standard Chartered', url: 'https://www.sc.com/hk/zh/deposits/board-rates/', extraWait: 15000, mapping: [{ id: 'sc_priority', tier: '優先理財' }, { id: 'sc_standard', tier: 'Global' }] },
+    { bankName: 'BOC', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', mapping: [{ id: 'boc_wealth', tier: '定期存款' }, { id: 'boc_standard', tier: '定期存款' }] },
+    { bankName: 'Citibank', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', mapping: [{ id: 'citi_gold', tier: 'Citigold' }, { id: 'citi_plus', tier: 'Citi Plus' }] },
+    { bankName: 'Standard Chartered', url: 'https://www.sc.com/hk/deposits/online-time-deposit/', extraWait: 15000, mapping: [{ id: 'sc_priority', tier: '優先理財' }, { id: 'sc_standard', tier: '網上特惠' }] },
     { bankName: 'BEA', url: 'https://www.hkbea.com/html/en/bea-personal-banking-supremegold-time-deposit.html', mapping: [{ id: 'bea_supreme', tier: 'SupremeGold' }] },
-    { bankName: 'ICBC', url: 'https://www.icbcasia.com/hk/en/personal/latest-promotion/online-time-deposit.html', mapping: [{ id: 'icbc_elite', tier: 'Elite' }] },
+    { bankName: 'ICBC', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', mapping: [{ id: 'icbc_elite', tier: '理財金' }] },
     { bankName: 'CCB', url: 'https://www.asia.ccb.com/hongkong/personal/accounts/dep_rates.html', mapping: [{ id: 'ccb_prestige', tier: 'Prestige' }] },
+    { bankName: 'Public Bank', url: 'https://www.publicbank.com.hk/en/usefultools/rates/depositinterestrates', mapping: [{ id: 'public_online', tier: 'Board Rate' }] },
     { bankName: 'ZA Bank', url: 'https://bank.za.group/hk/deposit', mapping: [{ id: 'za', tier: '港元' }] },
-    { bankName: 'Fusion Bank', url: 'https://www.fusionbank.com/rate.html?lang=tc', mapping: [{ id: 'fusion', tier: 'HKD' }] },
-    { bankName: 'PAOB', url: 'https://www.paob.com.hk/tc/deposit.html', mapping: [{ id: 'paob', tier: '個人客戶' }] }
+    { bankName: 'Fusion Bank', url: 'https://www.fusionbank.com/deposit.html?lang=tc', mapping: [{ id: 'fusion', tier: 'HKD' }] },
+    { bankName: 'Livi Bank', url: 'https://www.livibank.com/features/livisave.html', mapping: [{ id: 'livi', tier: '定期存款' }] },
+    { bankName: 'Airstar Bank', url: 'https://www.airstarbank.com/en-hk/hkprime.html', mapping: [{ id: 'airstar', tier: 'Fixed Deposit' }] }
   ];
 
-  // 1. 嘗試官網抓取
   for (const t of tasks) await scrapeBank(browser, t, failedBankIds);
-
-  // 2. 針對失敗的銀行執行 Fallback (U Lifestyle)
-  await scrapeFallbackSource(browser, Array.from(failedBankIds));
+  await scrapeFallback(browser, Array.from(failedBankIds));
 
   await browser.close();
-  console.log('\n🎉 所有抓取與補全任務結束。');
+  console.log('\n🎉 所有銀行抓取任務完全結束。');
 }
 
 run();
