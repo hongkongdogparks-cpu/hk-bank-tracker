@@ -6,6 +6,11 @@ import {
   Calculator, Share2, ShieldAlert, Zap, Target, TrendingDown, Menu, X, Landmark, BellRing, CalendarPlus, GraduationCap, ExternalLink, ChevronDown, ChevronUp, Layers, HelpCircle, BadgePercent, Coins, Gift
 } from 'lucide-react';
 
+// ==========================================
+// 💡 手動更新專區：修改這裡的日期與下方利率即可更新網頁
+// ==========================================
+const LAST_UPDATED_DATE = "2026-04-14 21:30"; // 每次改利率時，請修改此時間以便檢查更新
+
 // --- Translation Dictionary ---
 const T = {
   zh_TW: {
@@ -20,7 +25,7 @@ const T = {
     tenorLabel: '存期', 
     contactBank: '聯繫查詢',
     syncing: '手動更新',
-    lastUpdateBy: '最後更新日期：',
+    lastUpdateBy: '最後更新：',
     adLabel: '贊助商內容',
     disclaimerTitle: '法律免責聲明與風險披露',
     disclaimerText: '本站引用金管局 (HKMA) 及投委會 (IFEC) 資料以確保權威性。本網站所載資訊僅供參考，不構成任何財務建議。實際利率及條款以銀行最終批核為準。',
@@ -29,7 +34,7 @@ const T = {
     pushBtn: '訂閱通知',
     backToDash: '返回看板',
     exampleLabel: '💡 情境實例：',
-    clickToExpand: '點擊展開案例分析分析',
+    clickToExpand: '點擊展開案例分析',
     officialGuide: '官方指南',
     notAvailable: '暫無提供'
   },
@@ -60,7 +65,7 @@ const T = {
   },
 };
 
-// --- Financial Glossary (Full 20 Terms) ---
+// --- Financial Glossary ---
 const GLOSSARY_DATA = [
   { id: 'pa', term_zh: '年利率 (Per Annum)', term_en: 'Per Annum (p.a.)', zh_desc: '以一年為基準計算的利息百分比。', en_desc: 'Standardized annual interest rate applied to deposits.', link: 'https://www.ifec.org.hk/sid/tc/money-management/savings/time-deposits.shtml', zh_ex: '即使存期只有 3 個月，標示 4% p.a. 代表存入 100 萬後，3 個月收息 1 萬 (1M * 4% / 4)。', en_ex: 'A 3M term with 4% p.a. earns $10k on $1M principal.' },
   { id: 'newfunds', term_zh: '新資金 (New Funds)', term_en: 'New Funds', zh_desc: '銀行定義為比起某特定參考日新增的結餘。', en_desc: 'Incremental balance increase compared to a specific date.', link: null, zh_ex: '原本有 10 萬，額外存入 20 萬，這 20 萬才享有高息優惠。', en_ex: 'Only fresh capital from other banks qualifies for promos.' },
@@ -265,13 +270,13 @@ export default function App() {
         <section className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
            <div className="flex items-center gap-2 text-teal-600 mb-4 pb-2 border-b">
               <Layers size={20} />
-              <h3 className="text-lg font-black">{c.l1}</h3>
+              <h3 className="text-lg font-black">{lang === 'zh_TW' ? '階梯式定存法 (The Ladder)' : 'The FD Ladder Strategy'}</h3>
            </div>
            <div className="flex flex-col md:flex-row gap-8 items-center">
               <div className="flex flex-col gap-1 items-center font-black shrink-0">
-                 <div className="w-12 h-6 bg-teal-100 rounded text-[7px] flex items-center justify-center">3M</div>
-                 <div className="w-12 h-10 bg-teal-300 rounded text-[7px] flex items-center justify-center">6M</div>
-                 <div className="w-12 h-16 bg-teal-600 rounded text-white text-[7px] flex items-center justify-center">12M</div>
+                 <div className="w-12 h-6 bg-teal-100 rounded flex items-center justify-center text-[7px]">3M</div>
+                 <div className="w-12 h-10 bg-teal-300 rounded flex items-center justify-center text-[7px]">6M</div>
+                 <div className="w-12 h-16 bg-teal-600 rounded text-white flex items-center justify-center text-[7px]">12M</div>
               </div>
               <p className="text-[10px] text-slate-500 leading-relaxed font-medium italic">{c.ld}</p>
            </div>
@@ -463,7 +468,7 @@ export default function App() {
                   <a href="https://www.hkma.gov.hk/" target="_blank" className="hover:text-blue-500 transition-colors">HKMA 金管局</a>
                   <a href="https://www.dps.org.hk/" target="_blank" className="hover:text-blue-500 transition-colors">DPS 存保會</a>
                 </div>
-                <span className="flex items-center gap-2 font-bold uppercase tracking-widest">V11.8 Hardcoded Full • 2026-04-14 Update</span>
+                <span className="flex items-center gap-2 font-bold uppercase tracking-widest">V11.8 Hardcoded Full • {LAST_UPDATED_DATE}</span>
               </div>
             </footer>
           </div>
