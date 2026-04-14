@@ -9,7 +9,7 @@ import {
 // ==========================================
 // 💡 手動更新專區：修改這裡的日期與下方利率即可更新網頁
 // ==========================================
-const LAST_UPDATED_DATE = "2026-04-14 21:30"; // 每次改利率時，請修改此時間以便檢查更新
+const LAST_UPDATED_DATE = "2026-04-14 22:30"; 
 
 // --- Translation Dictionary ---
 const T = {
@@ -19,7 +19,7 @@ const T = {
     subtitle: '專業級手動監控版 (2026)',
     all: '全部', trad: '傳統', virt: '虛擬',
     searchPlace: '搜尋銀行、代號或帳戶等級…',
-    sortRate: '利率最高', sortCode: '銀行編號',
+    sortRate: '按利率', sortCode: '按編號',
     interestLabel: '預計收益', rateLabel: '年利率 p.a.',
     minDeposit: '起存額', amountLabel: '預計存款金額',
     tenorLabel: '存期', 
@@ -44,7 +44,7 @@ const T = {
     subtitle: 'Pro Manual Version (2026)',
     all: 'All', trad: 'Trad', virt: 'Virt',
     searchPlace: 'Search bank, code or tier...',
-    sortRate: 'Highest Rate', sortCode: 'Bank Code',
+    sortRate: 'By Rate', sortCode: 'By Code',
     interestLabel: 'Est. Return', rateLabel: 'Rate p.a.',
     minDeposit: 'Min. Dep', amountLabel: 'Deposit Amount',
     tenorLabel: 'Tenor', 
@@ -65,7 +65,7 @@ const T = {
   },
 };
 
-// --- Financial Glossary ---
+// --- Financial Glossary (20 Terms) ---
 const GLOSSARY_DATA = [
   { id: 'pa', term_zh: '年利率 (Per Annum)', term_en: 'Per Annum (p.a.)', zh_desc: '以一年為基準計算的利息百分比。', en_desc: 'Standardized annual interest rate applied to deposits.', link: 'https://www.ifec.org.hk/sid/tc/money-management/savings/time-deposits.shtml', zh_ex: '即使存期只有 3 個月，標示 4% p.a. 代表存入 100 萬後，3 個月收息 1 萬 (1M * 4% / 4)。', en_ex: 'A 3M term with 4% p.a. earns $10k on $1M principal.' },
   { id: 'newfunds', term_zh: '新資金 (New Funds)', term_en: 'New Funds', zh_desc: '銀行定義為比起某特定參考日新增的結餘。', en_desc: 'Incremental balance increase compared to a specific date.', link: null, zh_ex: '原本有 10 萬，額外存入 20 萬，這 20 萬才享有高息優惠。', en_ex: 'Only fresh capital from other banks qualifies for promos.' },
@@ -89,28 +89,19 @@ const GLOSSARY_DATA = [
   { id: 'hkma', term_zh: '金管局 (HKMA)', term_en: 'HKMA', zh_desc: '香港銀行業最高監管機構。', en_desc: 'HK central banking regulator.', link: 'https://www.hkma.gov.hk/', zh_ex: '虛銀執照均由金管局發出。', en_ex: 'Ensures all HK banks follow safety regulations.' },
 ];
  
-// --- Initial Bank Data (Hardcoded based on your rates.csv screenshot) ---
+// --- Initial Bank Data (Updated based on latest CSV) ---
 const INITIAL_BANKS = [
-  { id: 'hsbc_elite', name: { zh: '滙豐 卓越尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.2, '12m': 3.1 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '尊尚理財客戶', en: 'Premier Elite' }, color: 'bg-rose-600' },
-  { id: 'hsbc_premier', name: { zh: '滙豐 卓越理財', en: 'HSBC Premier' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.1, '12m': 3.0 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '卓越理財客戶', en: 'Premier' }, color: 'bg-rose-500' },
-  { id: 'hsbc_one', name: { zh: '滙豐 HSBC One', en: 'HSBC One' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.3, '6m': 3.0, '12m': 2.9 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上辦理', en: 'Online Only' }, color: 'bg-rose-400' },
-  { id: 'hsbc_others', name: { zh: '滙豐 其他', en: 'HSBC Others' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 0.5, '6m': 0.3, '12m': 0.2 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '一般理財', en: 'Standard' }, color: 'bg-rose-300' },
-  { id: 'hangseng_priv', name: { zh: '恒生 優越私人理財', en: 'Hang Seng Prestige Private' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.6, '6m': 3.4, '12m': 3.2 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '私人理財客戶', en: 'Private Banking' }, color: 'bg-emerald-700' },
-  { id: 'hangseng_prestige_online', name: { zh: '恒生 優越理財 (網上)', en: 'Hang Seng Prestige (Online)' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.3, '12m': 3.1 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上專享', en: 'Online Only' }, color: 'bg-emerald-600' },
-  { id: 'hangseng_prestige_branch', name: { zh: '恒生 優越理財 (分行)', en: 'Hang Seng Prestige (Branch)' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.3, '6m': 3.1, '12m': 2.9 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '分行辦理', en: 'Branch Only' }, color: 'bg-emerald-500' },
-  { id: 'hangseng_preferred_online', name: { zh: '恒生 優進理財 (網上)', en: 'Hang Seng Preferred (Online)' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.2, '12m': 3.0 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上專享', en: 'Online Only' }, color: 'bg-emerald-400' },
+  { id: 'hsbc_elite', name: { zh: '滙豐 卓越尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 2.2, '6m': 2.0, '12m': 1.8 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '新資金優惠', en: 'New Funds' }, color: 'bg-rose-600' },
+  { id: 'hsbc_premier', name: { zh: '滙豐 卓越理財', en: 'HSBC Premier' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 2.1, '6m': 1.9, '12m': 1.7 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '卓越理財客戶', en: 'Premier' }, color: 'bg-rose-500' },
+  { id: 'hsbc_one', name: { zh: '滙豐 HSBC One', en: 'HSBC One' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 2.0, '6m': 1.8, '12m': 1.6 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上辦理', en: 'Online Only' }, color: 'bg-rose-400' },
+  { id: 'hangseng_priv', name: { zh: '恒生 優越私人理財', en: 'Hang Seng Prestige Private' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.4, '12m': 3.2 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '私人理財客戶', en: 'Private Banking' }, color: 'bg-emerald-700' },
+  { id: 'hangseng_prestige', name: { zh: '恒生 優越理財', en: 'Hang Seng Prestige' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.3, '12m': 3.1 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上專享', en: 'Online Only' }, color: 'bg-emerald-600' },
   { id: 'boc_wealth', name: { zh: '中銀理財 Private Wealth', en: 'BOC Private Wealth' }, stockCode: '2388', domain: 'www.bochk.com', url: 'https://www.bochk.com/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.3, '12m': 3.1 } }, minDeposit: 1000000, type: 'trad', conditions: { zh: '高端客戶', en: 'Wealth Tier' }, color: 'bg-red-800' },
-  { id: 'boc_enrich', name: { zh: '中銀 智盈理財', en: 'BOC Enrich' }, stockCode: '2388', domain: 'www.bochk.com', url: 'https://www.bochk.com/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.2, '12m': 3.0 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '一般理財', en: 'Standard' }, color: 'bg-red-600' },
   { id: 'bea_supreme', name: { zh: '東亞 至尊理財', en: 'BEA SupremeGold' }, stockCode: '0023', domain: 'www.hkbea.com', url: 'https://www.hkbea.com/', rates: { HKD: { '1m': 0.1, '3m': 3.7, '6m': 3.5, '12m': 3.3 } }, minDeposit: 100000, type: 'trad', conditions: { zh: '高端客戶', en: 'SupremeGold' }, color: 'bg-amber-600' },
-  { id: 'bea_others', name: { zh: '東亞 其他理財', en: 'BEA Others' }, stockCode: '0023', domain: 'www.hkbea.com', url: 'https://www.hkbea.com/', rates: { HKD: { '1m': 0.1, '3m': 3.2, '6m': 3.0, '12m': 2.8 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '一般理財', en: 'Others' }, color: 'bg-amber-500' },
   { id: 'icbc_wise_gold', name: { zh: '工銀 理財金', en: 'ICBC Wise Gold' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com/', rates: { HKD: { '1m': 0.1, '3m': 3.6, '6m': 3.4, '12m': 3.2 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上特惠', en: 'Online Special' }, color: 'bg-red-700' },
-  { id: 'icbc_gold', name: { zh: '工銀 金卡客戶', en: 'ICBC Gold Client' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.2, '12m': 3.0 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '金卡級別', en: 'Gold Tier' }, color: 'bg-red-500' },
   { id: 'citi_gold_new', name: { zh: '花旗 New Citigold', en: 'Citi New Citigold' }, stockCode: 'US:C', domain: 'www.citibank.com.hk', url: 'https://www.citibank.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.8, '6m': 3.6, '12m': 3.4 } }, minDeposit: 50000, type: 'trad', conditions: { zh: '新開戶', en: 'New Client' }, color: 'bg-blue-700' },
-  { id: 'sc_priority', name: { zh: '渣打 優先理財', en: 'SC Priority' }, stockCode: '2888', domain: 'www.sc.com', url: 'https://www.sc.com/hk/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.3, '12m': 3.1 } }, minDeposit: 1000000, type: 'trad', conditions: { zh: '網上專享', en: 'Online Only' }, color: 'bg-blue-600' },
   { id: 'za_new', name: { zh: '眾安 ZA Bank (新)', en: 'ZA Bank (New)' }, stockCode: 'VB01', domain: 'bank.za.group', url: 'https://bank.za.group/', rates: { HKD: { '1m': 0.1, '3m': 3.9, '6m': 3.7, '12m': 3.3 } }, minDeposit: 1, type: 'virt', conditions: { zh: '開戶獎賞', en: 'New Reward' }, color: 'bg-teal-600' },
-  { id: 'za_existing', name: { zh: '眾安 ZA Bank (舊)', en: 'ZA Bank (Existing)' }, stockCode: 'VB01', domain: 'bank.za.group', url: 'https://bank.za.group/', rates: { HKD: { '1m': 0.1, '3m': 3.5, '6m': 3.3, '12m': 3.0 } }, minDeposit: 1, type: 'virt', conditions: { zh: '現有客戶', en: 'Existing' }, color: 'bg-teal-500' },
   { id: 'mox_all', name: { zh: 'Mox Bank', en: 'Mox Bank' }, stockCode: 'VB04', domain: 'www.mox.com', url: 'https://mox.com/', rates: { HKD: { '1m': 0.1, '3m': 3.6, '6m': 3.5, '12m': 3.2 } }, minDeposit: 1, type: 'virt', conditions: { zh: '所有客戶', en: 'All Clients' }, color: 'bg-black' },
-  { id: 'livi_low', name: { zh: 'livi (500-5萬)', en: 'livi (500-50k)' }, stockCode: 'VB03', domain: 'www.livibank.com', url: 'https://www.livibank.com/', rates: { HKD: { '1m': 0.1, '3m': 1.5, '6m': 1.2, '12m': 1.0 } }, minDeposit: 500, type: 'virt', conditions: { zh: '一般存額', en: 'Basic' }, color: 'bg-blue-500' },
   { id: 'livi_high', name: { zh: 'livi (5萬+)', en: 'livi (>50k)' }, stockCode: 'VB03', domain: 'www.livibank.com', url: 'https://www.livibank.com/', rates: { HKD: { '1m': 0.1, '3m': 3.7, '6m': 3.6, '12m': 3.3 } }, minDeposit: 50000, type: 'virt', conditions: { zh: '高息存額', en: 'High Tier' }, color: 'bg-blue-600' },
   { id: 'fubon_new', name: { zh: '富邦銀行 (新)', en: 'Fubon (New)' }, stockCode: '0636', domain: 'www.fubonbank.com.hk', url: 'https://www.fubonbank.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.8, '6m': 3.7, '12m': 3.5 } }, minDeposit: 500000, type: 'trad', conditions: { zh: '新資金', en: 'New Funds' }, color: 'bg-red-500' },
   { id: 'ocbc_retail', name: { zh: '華僑 OCBC', en: 'OCBC Hong Kong' }, stockCode: '0606', domain: 'www.ocbc.com.hk', url: 'https://www.ocbc.com.hk/', rates: { HKD: { '1m': 0.1, '3m': 3.4, '6m': 3.2, '12m': 3.0 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '零售定存', en: 'Retail' }, color: 'bg-red-600' },
@@ -125,20 +116,19 @@ export default function App() {
   const [isCompound, setIsCompound] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('rate');
+  const [sortBy, setSortBy] = useState('rate'); // Re-added sort state
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [expandedTerm, setExpandedTerm] = useState(null);
 
   const t = T[lang];
 
-  // 動態標題優化
   useEffect(() => {
     document.title = `${t.title} | ${t.subtitle}`;
   }, [lang, t]);
 
   const sortedBanks = useMemo(() => {
     const q = searchQuery.toLowerCase();
-    return banks
+    return [...banks]
       .filter(b => {
         const bName = lang === 'zh_TW' ? b.name.zh : b.name.en;
         return (bName + b.stockCode).toLowerCase().includes(q);
@@ -167,25 +157,25 @@ export default function App() {
   };
 
   const InfoSection = ({ icon: Icon, title, points, description, bgColor, accentColor, link, linkText }) => (
-    <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm animate-in fade-in duration-500">
-      <div className={`${bgColor} p-4 text-white flex items-center gap-3`}>
-        <Icon size={18} />
-        <h2 className="text-base font-black">{title}</h2>
+    <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm animate-in fade-in duration-500">
+      <div className={`${bgColor} p-6 text-white flex items-center gap-4`}>
+        <Icon size={24} />
+        <h2 className="text-xl font-black">{title}</h2>
       </div>
-      <div className="p-5 space-y-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="p-7 space-y-6">
+        <div className="flex flex-wrap gap-3">
           {points.map((p, i) => (
-            <div key={i} className="flex-1 min-w-[110px] bg-slate-50 border border-slate-100 p-2.5 rounded-xl flex items-center gap-2">
-              <CheckCircle2 size={12} className={`${accentColor} shrink-0`} />
-              <div className="text-[8px] font-black text-slate-800 leading-tight uppercase">{p}</div>
+            <div key={i} className="bg-slate-50 border border-slate-100 p-3 px-4 rounded-2xl flex items-center gap-2">
+              <CheckCircle2 size={16} className={`${accentColor} shrink-0`} />
+              <div className="text-[12px] font-black text-slate-800 leading-tight uppercase">{p}</div>
             </div>
           ))}
         </div>
-        <div className="prose prose-slate max-w-none text-slate-600 text-[11px] leading-relaxed border-l-4 border-slate-100 pl-4">
+        <div className="prose prose-slate max-w-none text-slate-600 text-[14px] leading-relaxed border-l-4 border-slate-100 pl-6">
           {description}
           {link && (
-            <a href={link} target="_blank" className={`inline-flex items-center gap-1 mt-2 font-black ${accentColor.replace('text', 'hover:text')} underline decoration-1 underline-offset-2`}>
-              {linkText} <ExternalLink size={8}/>
+            <a href={link} target="_blank" className={`inline-flex items-center gap-2 mt-4 font-black ${accentColor.replace('text', 'hover:text')} underline decoration-2 underline-offset-4`}>
+              {linkText} <ExternalLink size={14}/>
             </a>
           )}
         </div>
@@ -216,11 +206,11 @@ export default function App() {
       t4d: 'USD spreads can eat up to 60% of your yield advantage on a 3-month term.'
     };
     return (
-      <div className="space-y-4 pb-16 animate-in fade-in duration-300">
-        <section className="bg-blue-600 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-lg">
-          <HelpCircle className="absolute top-0 right-0 p-8 opacity-10 rotate-12 w-40 h-40" />
-          <h2 className="text-2xl font-black mb-1 tracking-tighter">{c.h1}</h2>
-          <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest">Education starts from zero.</p>
+      <div className="space-y-6 pb-16 animate-in fade-in duration-300">
+        <section className="bg-blue-600 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-lg">
+          <HelpCircle className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
+          <h2 className="text-3xl font-black mb-2 tracking-tighter">{c.h1}</h2>
+          <p className="text-blue-100 text-[12px] font-bold uppercase tracking-widest">Education starts from zero.</p>
         </section>
         <InfoSection icon={BookOpen} title={c.t1} bgColor="bg-blue-500" accentColor="text-blue-500" points={c.t1p} description={c.t1d} />
         <InfoSection icon={ShieldAlert} title={c.t2} bgColor="bg-slate-800" accentColor="text-slate-800" points={c.t2p} description={c.t2d} link="https://www.hkma.gov.hk/chi/smart-consumers/virtual-banks/" linkText={t.officialGuide} />
@@ -234,7 +224,7 @@ export default function App() {
     const getCalendarLink = () => {
       const end = new Date(); end.setMonth(end.getMonth() + 3);
       const iso = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
-      return `https://www.google.com/calendar/render?action=TEMPLATE&text=💰+定存到期提醒&details=立刻回網站查看最新利率：https://hk-bank-tracker.firebaseapp.com&dates=${iso(end)}/${iso(end)}`;
+      return `https://www.google.com/calendar/render?action=TEMPLATE&text=💰+定存到期提醒&details=立刻回網站查看最新利率：https://hk-bank-tracker.vercel.app&dates=${iso(end)}/${iso(end)}`;
     };
 
     const c = lang === 'zh_TW' ? {
@@ -260,148 +250,155 @@ export default function App() {
     };
 
     return (
-      <div className="space-y-6 pb-16 animate-in fade-in duration-300">
-        <section className="bg-slate-900 rounded-[2rem] p-8 text-white relative overflow-hidden shadow-xl">
-          <Zap className="absolute top-0 right-0 p-8 opacity-10 rotate-12 w-40 h-40" />
-          <h2 className="text-3xl font-black mb-1 tracking-tighter">{c.h1}</h2>
-          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Maximize your cash returns.</p>
+      <div className="space-y-8 pb-16 animate-in fade-in duration-300">
+        <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl">
+          <Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
+          <h2 className="text-4xl font-black mb-2 tracking-tighter">{c.h1}</h2>
+          <p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest">Maximize your cash returns.</p>
         </section>
 
-        <section className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
-           <div className="flex items-center gap-2 text-teal-600 mb-4 pb-2 border-b">
-              <Layers size={20} />
-              <h3 className="text-lg font-black">{lang === 'zh_TW' ? '階梯式定存法 (The Ladder)' : 'The FD Ladder Strategy'}</h3>
+        <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+           <div className="flex items-center gap-3 text-teal-600 mb-6 pb-3 border-b">
+              <Layers size={24} />
+              <h3 className="text-2xl font-black">{c.l1}</h3>
            </div>
-           <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex flex-col gap-1 items-center font-black shrink-0">
-                 <div className="w-12 h-6 bg-teal-100 rounded flex items-center justify-center text-[7px]">3M</div>
-                 <div className="w-12 h-10 bg-teal-300 rounded flex items-center justify-center text-[7px]">6M</div>
-                 <div className="w-12 h-16 bg-teal-600 rounded text-white flex items-center justify-center text-[7px]">12M</div>
+           <div className="flex flex-col md:flex-row gap-10 items-center">
+              <div className="flex flex-col gap-2 items-center font-black shrink-0">
+                 <div className="w-14 h-7 bg-teal-100 rounded flex items-center justify-center text-[10px]">3M</div>
+                 <div className="w-14 h-12 bg-teal-300 rounded flex items-center justify-center text-[10px]">6M</div>
+                 <div className="w-14 h-20 bg-teal-600 rounded text-white flex items-center justify-center text-[10px]">12M</div>
               </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed font-medium italic">{c.ld}</p>
+              <p className="text-[13px] text-slate-600 leading-relaxed font-medium italic">{c.ld}</p>
            </div>
         </section>
 
         <InfoSection icon={TrendingUp} title={c.hTitle} bgColor="bg-indigo-600" accentColor="text-indigo-600" points={['轉數快 (FPS)', '大額 (CHATS)', '冷卻期重置']} description={c.hDesc} />
         <InfoSection icon={Gift} title={c.bTitle} bgColor="bg-amber-600" accentColor="text-amber-600" points={['推薦獎賞', '消費任務', '限時加息券']} description={c.bDesc} />
 
-        <section className="bg-orange-50 border border-orange-100 p-8 rounded-[2.5rem] shadow-sm">
-           <div className="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-orange-200 pb-6 mb-6 text-orange-900">
-              <div className="flex items-center gap-5">
-                <CalendarPlus size={36} />
-                <div className="space-y-1">
-                   <h4 className="font-black text-xl">{c.r1}</h4>
-                   <p className="text-[10px] font-bold uppercase tracking-widest">一鍵同步手機日曆</p>
+        <section className="bg-orange-50 border border-orange-100 p-10 rounded-[2.5rem] shadow-sm">
+           <div className="flex flex-col md:flex-row items-center justify-between gap-8 border-b border-orange-200 pb-8 mb-8 text-orange-900">
+              <div className="flex items-center gap-6">
+                <CalendarPlus size={48} />
+                <div className="space-y-2">
+                   <h4 className="font-black text-2xl">{c.r1}</h4>
+                   <p className="text-[12px] font-bold uppercase tracking-widest">一鍵同步手機日曆</p>
                 </div>
               </div>
-              <a href={getCalendarLink()} target="_blank" className="bg-orange-600 text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-orange-700 transition-all flex items-center gap-2 shadow-lg active:scale-95"><CalendarPlus size={20}/> {t.calendarBtn}</a>
+              <a href={getCalendarLink()} target="_blank" className="bg-orange-600 text-white px-12 py-5 rounded-2xl font-black text-base hover:bg-orange-700 transition-all shadow-lg active:scale-95"><CalendarPlus size={24}/> {t.calendarBtn}</a>
            </div>
-           <p className="text-[11px] font-medium leading-relaxed text-orange-800">{c.rd}</p>
+           <p className="text-[14px] font-medium leading-relaxed text-orange-800">{c.rd}</p>
         </section>
       </div>
     );
   };
 
   const GlossaryPage = () => (
-    <div className="space-y-4 pb-16 animate-in fade-in duration-300">
-      <div className="bg-slate-100 rounded-[2rem] p-8 flex items-center justify-between shadow-inner">
-        <h2 className="text-2xl font-black text-slate-900 tracking-tighter">金融詞彙百科 (Glossary)</h2>
-        <GraduationCap size={48} className="text-slate-300 hidden md:block" />
+    <div className="space-y-6 pb-16 animate-in fade-in duration-300">
+      <div className="bg-slate-100 rounded-[2.5rem] p-10 flex items-center justify-between shadow-inner">
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">金融詞彙百科 (Glossary)</h2>
+        <GraduationCap size={64} className="text-slate-300 hidden md:block" />
       </div>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {GLOSSARY_DATA.map((item, i) => (
-          <div key={item.id} className="bg-white border border-slate-200 p-4 rounded-2xl hover:border-blue-400 transition-all group shadow-sm">
+          <div key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 transition-all group shadow-sm">
             <button onClick={() => setExpandedTerm(expandedTerm === i ? null : i)} className="w-full text-left focus:outline-none">
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-black text-blue-600 text-[13px] tracking-tight">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-black text-blue-600 text-[16px] tracking-tight">
                   {lang === 'zh_TW' ? `${item.term_zh} (${item.term_en})` : item.term_en}
                 </span>
-                {expandedTerm === i ? <ChevronUp size={12} className="text-slate-300" /> : <ChevronDown size={12} className="text-slate-300" />}
+                {expandedTerm === i ? <ChevronUp size={16} className="text-slate-300" /> : <ChevronDown size={16} className="text-slate-300" />}
               </div>
-              <p className="text-[10px] text-slate-500 font-bold leading-relaxed">{lang === 'zh_TW' ? item.zh_desc : item.en_desc}</p>
+              <p className="text-[13px] text-slate-500 font-bold leading-relaxed">{lang === 'zh_TW' ? item.zh_desc : item.en_desc}</p>
             </button>
             {expandedTerm === i && (
-              <div className="mt-3 pt-3 border-t border-slate-50 animate-in slide-in-from-top-1">
-                <p className="text-[8px] font-black text-slate-400 mb-1 uppercase tracking-widest">{t.exampleLabel}</p>
-                <p className="text-[10px] text-slate-600 font-medium bg-slate-50 p-2.5 rounded-lg shadow-inner">{lang === 'zh_TW' ? item.zh_ex : item.en_ex}</p>
+              <div className="mt-4 pt-4 border-t border-slate-50 animate-in slide-in-from-top-1">
+                <p className="text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">{t.exampleLabel}</p>
+                <p className="text-[13px] text-slate-600 font-medium bg-slate-50 p-4 rounded-2xl shadow-inner leading-relaxed">{lang === 'zh_TW' ? item.zh_ex : item.en_ex}</p>
                 {item.link && (
-                  <a href={item.link} target="_blank" className="inline-flex items-center gap-1 mt-3 text-[8px] font-black text-indigo-500 hover:text-indigo-600 uppercase border-b">{t.officialGuide} <ExternalLink size={8}/></a>
+                  <a href={item.link} target="_blank" className="inline-flex items-center gap-2 mt-4 text-[11px] font-black text-indigo-500 hover:text-indigo-600 uppercase border-b-2 border-transparent hover:border-indigo-100">{t.officialGuide} <ExternalLink size={12}/></a>
                 )}
               </div>
             )}
           </div>
         ))}
       </div>
-      <button onClick={() => setCurrentPage('dashboard')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all shadow-lg active:scale-95">{t.backToDash}</button>
+      <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-widest text-[14px] hover:bg-slate-800 transition-all shadow-lg active:scale-95">{t.backToDash}</button>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans antialiased pb-20 selection:bg-blue-100">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 h-11 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 cursor-pointer group" onClick={() => setCurrentPage('dashboard')}>
-              <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-md group-hover:rotate-12 transition-transform"><TrendingUp size={14} /></div>
-              <h1 className="text-[14px] font-black tracking-tighter leading-none hidden sm:block">{t.title}</h1>
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setCurrentPage('dashboard')}>
+              <div className="bg-blue-600 p-2 rounded-xl text-white shadow-md group-hover:rotate-12 transition-transform"><TrendingUp size={20} /></div>
+              <h1 className="text-[18px] font-black tracking-tighter leading-none hidden sm:block">{t.title}</h1>
             </div>
-            <div className="hidden lg:flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg font-black text-[8px] uppercase tracking-widest">
+            <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl font-black text-[10px] uppercase tracking-widest">
               {Object.keys(t.nav).map(page => (
-                <button key={page} onClick={() => setCurrentPage(page)} className={`px-2.5 py-1.5 rounded-md transition-all ${currentPage === page ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t.nav[page]}</button>
+                <button key={page} onClick={() => setCurrentPage(page)} className={`px-4 py-2 rounded-lg transition-all ${currentPage === page ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t.nav[page]}</button>
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 p-0.5 rounded-md">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg">
               {['zh_TW', 'en'].map(l => (
-                <button key={l} onClick={() => setLang(l)} className={`px-2 py-1 rounded-[4px] text-[8px] font-black transition-all ${lang === l ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}>{l === 'zh_TW' ? '繁' : 'EN'}</button>
+                <button key={l} onClick={() => setLang(l)} className={`px-3 py-1.5 rounded-md text-[10px] font-black transition-all ${lang === l ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}>{l === 'zh_TW' ? '繁' : 'EN'}</button>
               ))}
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 pt-4">
-        <div className="md:hidden flex overflow-x-auto gap-1 mb-4 pb-1 no-scrollbar font-black text-[8px] uppercase tracking-widest">
+      <main className="max-w-7xl mx-auto px-6 pt-6">
+        <div className="md:hidden flex overflow-x-auto gap-2 mb-6 pb-1 no-scrollbar font-black text-[10px] uppercase tracking-widest">
           {Object.keys(t.nav).map(page => (
-            <button key={page} onClick={() => setCurrentPage(page)} className={`whitespace-nowrap px-4 py-2 rounded-full border ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400'}`}>{t.nav[page]}</button>
+            <button key={page} onClick={() => setCurrentPage(page)} className={`whitespace-nowrap px-5 py-2.5 rounded-full border-2 ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-200 text-slate-400'}`}>{t.nav[page]}</button>
           ))}
         </div>
 
-        <div className="grid grid-cols-12 gap-5">
+        <div className="grid grid-cols-12 gap-8">
           <div className="col-span-12 lg:col-span-9">
             {currentPage === 'dashboard' && (
-              <div className="space-y-3 animate-in fade-in duration-300">
-                <div className="bg-white rounded-3xl border border-slate-200 p-5 flex flex-wrap gap-6 items-center shadow-sm">
-                  <div className="flex-1 min-w-[180px]">
-                    <label className="text-[8px] font-black text-slate-400 uppercase flex items-center gap-1.5 mb-1"><Wallet size={12} className="text-blue-500" /> {t.amountLabel}</label>
-                    <div className="flex items-center border-b-2 border-slate-50 focus-within:border-blue-500 transition-colors pb-1">
-                      <span className="text-lg font-black text-slate-300 mr-2">HK$</span>
-                      <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full bg-transparent text-3xl font-black outline-none tabular-nums tracking-tighter" />
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-wrap gap-10 items-center shadow-sm">
+                  <div className="flex-1 min-w-[220px]">
+                    <label className="text-[12px] font-black text-slate-400 uppercase flex items-center gap-2 mb-2 tracking-widest"><Wallet size={16} className="text-blue-500" /> {t.amountLabel}</label>
+                    <div className="flex items-center border-b-4 border-slate-50 focus-within:border-blue-500 transition-colors pb-2">
+                      <span className="text-2xl font-black text-slate-300 mr-3">HK$</span>
+                      <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full bg-transparent text-4xl font-black outline-none tabular-nums tracking-tighter" />
                     </div>
                   </div>
                   <div className="w-full md:w-auto">
-                    <label className="text-[8px] font-black text-slate-400 uppercase flex items-center gap-1.5 mb-2"><CalendarDays size={12} className="text-blue-500" /> {t.tenorLabel}</label>
-                    <div className="flex bg-slate-50 p-1 rounded-xl gap-1">
+                    <label className="text-[12px] font-black text-slate-400 uppercase flex items-center gap-2 mb-3 tracking-widest"><CalendarDays size={16} className="text-blue-500" /> {t.tenorLabel}</label>
+                    <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-2">
                       {['1m', '3m', '6m', '12m'].map(m => (
-                        <button key={m} onClick={() => setTenor(m)} className={`px-8 py-2.5 rounded-lg text-xs font-black transition-all ${tenor === m ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}>{m.toUpperCase()}</button>
+                        <button key={m} onClick={() => setTenor(m)} className={`px-10 py-3 rounded-xl text-sm font-black transition-all ${tenor === m ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}>{m.toUpperCase()}</button>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid gap-1.5">
-                   <div className="flex flex-wrap gap-2 items-center mb-1">
-                    <div className="relative flex-1 min-w-[220px]">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={12} />
-                      <input type="text" placeholder={t.searchPlace} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-8 pr-4 py-2 bg-white border border-slate-200 rounded-lg font-bold outline-none text-[9px] shadow-sm" />
+                <div className="grid gap-3">
+                   <div className="flex flex-wrap gap-3 items-center mb-2">
+                    <div className="relative flex-1 min-w-[280px]">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input type="text" placeholder={t.searchPlace} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold outline-none text-[13px] shadow-sm focus:ring-4 focus:ring-blue-50" />
                     </div>
-                    <div className="flex bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
+                    
+                    {/* Re-added Sort Functionality */}
+                    <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm gap-1">
+                      <button onClick={() => setSortBy('rate')} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all flex items-center gap-2 ${sortBy === 'rate' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}><SortAsc size={14}/> {t.sortRate}</button>
+                      <button onClick={() => setSortBy('code')} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${sortBy === 'code' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}>{t.sortCode}</button>
+                    </div>
+
+                    <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm">
                       {[['all', t.all], ['trad', t.trad], ['virt', t.virt]].map(([v, l]) => (
-                        <button key={v} onClick={() => setFilterType(v)} className={`px-4 py-1.5 text-[8px] font-black rounded-md transition-all ${filterType === v ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}>{l}</button>
+                        <button key={v} onClick={() => setFilterType(v)} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${filterType === v ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}>{l}</button>
                       ))}
                     </div>
-                    <button onClick={() => setIsCompound(!isCompound)} className={`p-2 rounded-lg border transition-all ${isCompound ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:text-blue-600'}`}><Calculator size={14} /></button>
+                    <button onClick={() => setIsCompound(!isCompound)} className={`p-3 rounded-2xl border transition-all ${isCompound ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:text-blue-600'}`}><Calculator size={18} /></button>
                   </div>
 
                   {sortedBanks.map(bank => {
@@ -409,37 +406,37 @@ export default function App() {
                     const hasR = r != null && r > 0;
                     const belowMin = amount < bank.minDeposit;
                     return (
-                      <div key={bank.id} className={`group bg-white rounded-2xl border border-slate-200 p-2.5 px-4 flex flex-wrap items-center gap-3 transition-all hover:shadow-lg hover:border-blue-200 ${belowMin ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
-                        <div className={`w-1 h-8 rounded-full ${bank.color} opacity-80 transition-opacity`}></div>
-                        <div className="flex items-center gap-3 min-w-[280px] flex-1">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 p-1.5 border border-slate-100 flex items-center justify-center shrink-0 shadow-inner">
+                      <div key={bank.id} className={`group bg-white rounded-3xl border border-slate-200 p-4 px-6 flex flex-wrap items-center gap-6 transition-all hover:shadow-xl hover:border-blue-300 ${belowMin ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                        <div className={`w-1.5 h-12 rounded-full ${bank.color} opacity-80 transition-opacity`}></div>
+                        <div className="flex items-center gap-5 min-w-[320px] flex-1">
+                          <div className="w-12 h-12 rounded-2xl bg-slate-50 p-2 border border-slate-100 flex items-center justify-center shrink-0 shadow-inner">
                             <img src={`https://www.google.com/s2/favicons?sz=64&domain=${bank.domain}`} className="w-full h-full object-contain" alt="" />
                           </div>
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-black text-sm tracking-tight text-slate-800">{lang === 'zh_TW' ? bank.name.zh : bank.name.en}</h3>
-                              <span className="text-[7px] font-black px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded-md uppercase">{bank.stockCode}</span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-3">
+                              <h3 className="font-black text-[17px] tracking-tight text-slate-800">{lang === 'zh_TW' ? bank.name.zh : bank.name.en}</h3>
+                              <span className="text-[11px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded-lg uppercase">{bank.stockCode}</span>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-slate-400 font-bold text-[7px] uppercase">
-                              <span className="bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">{lang === 'zh_TW' ? bank.conditions.zh : bank.conditions.en}</span>
-                              <span className="flex items-center gap-1"><ShieldCheck size={8} /> Min: HK${bank.minDeposit.toLocaleString()}</span>
+                            <div className="flex flex-wrap items-center gap-4 text-slate-400 font-bold text-[11px] uppercase tracking-wider">
+                              <span className="bg-slate-50 px-2 py-1 rounded-lg border border-slate-100 text-blue-500">{lang === 'zh_TW' ? bank.conditions.zh : bank.conditions.en}</span>
+                              <span className="flex items-center gap-1.5"><ShieldCheck size={12} /> Min: HK${bank.minDeposit.toLocaleString()}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 md:gap-10 ml-auto">
+                        <div className="flex items-center gap-8 md:gap-14 ml-auto">
                           <div className="text-right">
-                            <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t.rateLabel}</p>
+                            <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-1">{t.rateLabel}</p>
                             {hasR ? (
-                              <p className="text-xl font-black tabular-nums leading-none text-slate-900">{r.toFixed(3)}%</p>
+                              <p className="text-3xl font-black tabular-nums leading-none text-slate-900">{r.toFixed(3)}%</p>
                             ) : (
-                              <p className="text-[8px] font-black text-blue-500 uppercase border border-blue-50 px-1.5 py-0.5 rounded-md">{t.contactBank}</p>
+                              <p className="text-[11px] font-black text-blue-500 uppercase border-2 border-blue-50 px-3 py-1 rounded-xl">{t.contactBank}</p>
                             )}
                           </div>
-                          <div className="text-right min-w-[100px]">
-                            <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest mb-0.5">{t.interestLabel}</p>
-                            <p className={`text-lg font-black tabular-nums leading-none ${hasR ? 'text-emerald-500' : 'text-slate-100'}`}>{hasR ? `+${calcReturn(r).toLocaleString()}` : '--'}</p>
+                          <div className="text-right min-w-[130px]">
+                            <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-1">{t.interestLabel}</p>
+                            <p className={`text-2xl font-black tabular-nums leading-none ${hasR ? 'text-emerald-500' : 'text-slate-100'}`}>{hasR ? `+${calcReturn(r).toLocaleString()}` : '--'}</p>
                           </div>
-                          <a href={bank.url} target="_blank" rel="noreferrer" className="p-2.5 bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm shrink-0"><ArrowUpRight size={14} /></a>
+                          <a href={bank.url} target="_blank" rel="noreferrer" className="p-4 bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm shrink-0"><ArrowUpRight size={20} /></a>
                         </div>
                       </div>
                     );
@@ -452,39 +449,34 @@ export default function App() {
             {currentPage === 'strategies' && <YieldMaster />}
             {currentPage === 'glossary' && <GlossaryPage />}
 
-            <footer className="mt-12 p-8 bg-white rounded-[2rem] border border-slate-200 text-slate-500 text-xs">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-slate-900 rotate-12"><Scale size={140} /></div>
-              <div className="space-y-4 relative z-10">
-                <div className="flex items-center gap-3 text-slate-900 font-black uppercase tracking-widest text-sm">
-                  <AlertCircle size={20} className="text-blue-600" /> {t.disclaimerTitle}
+            <footer className="mt-12 p-10 bg-white rounded-[2.5rem] border border-slate-200 text-slate-500 text-[13px]">
+              <div className="absolute top-0 right-0 p-10 opacity-[0.02] text-slate-900 rotate-12"><Scale size={200} /></div>
+              <div className="space-y-6 relative z-10">
+                <div className="flex items-center gap-4 text-slate-900 font-black uppercase tracking-widest text-base">
+                  <AlertCircle size={24} className="text-blue-600" /> {t.disclaimerTitle}
                 </div>
-                <p className="text-[9px] font-semibold text-slate-400 leading-relaxed max-w-4xl border-l-4 border-slate-50 pl-4">
+                <p className="text-[12px] font-semibold text-slate-400 leading-relaxed max-w-4xl border-l-4 border-slate-50 pl-8">
                   {t.disclaimerText}
                 </p>
               </div>
-              <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-x-10 gap-y-4 justify-between items-center text-[9px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                <div className="flex gap-6 items-center">
+              <div className="pt-8 mt-8 border-t border-slate-100 flex flex-wrap gap-x-12 gap-y-6 justify-between items-center text-[12px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                <div className="flex gap-8 items-center">
                   <a href="https://www.ifec.org.hk/" target="_blank" className="hover:text-blue-500 transition-colors">IFEC 投委會</a>
                   <a href="https://www.hkma.gov.hk/" target="_blank" className="hover:text-blue-500 transition-colors">HKMA 金管局</a>
                   <a href="https://www.dps.org.hk/" target="_blank" className="hover:text-blue-500 transition-colors">DPS 存保會</a>
                 </div>
-                <span className="flex items-center gap-2 font-bold uppercase tracking-widest">V11.8 Hardcoded Full • {LAST_UPDATED_DATE}</span>
+                <span className="flex items-center gap-3 font-bold uppercase tracking-widest">V12.0 Final Layout • {LAST_UPDATED_DATE} Update</span>
               </div>
             </footer>
           </div>
 
           <aside className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-16 space-y-6">
-              <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-4 flex flex-col items-center min-h-[500px] shadow-sm text-center">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4">{t.adLabel}</p>
-                <div className="w-full flex-1 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex items-center justify-center p-4">
-                  <span className="text-[10px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">AdSense Skyscraper Area</span>
+            <div className="sticky top-20 space-y-8">
+              <div className="bg-white border-2 border-dashed border-slate-300 rounded-[2.5rem] p-6 flex flex-col items-center min-h-[600px] shadow-sm text-center">
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-6">{t.adLabel}</p>
+                <div className="w-full flex-1 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-center p-6">
+                  <span className="text-[12px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">AdSense Vertical Skyscraper</span>
                 </div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2rem] p-6 text-white shadow-xl shadow-blue-200 transition-transform hover:scale-[1.02]">
-                <ShieldCheck size={28} className="mb-4" />
-                <h4 className="font-black text-xs uppercase tracking-widest mb-2">Authority Standard</h4>
-                <p className="text-[9px] font-bold leading-relaxed opacity-90 uppercase tracking-tighter">We reference HKMA and IFEC standards to ensure our calculations follow official regulations.</p>
               </div>
             </div>
           </aside>
