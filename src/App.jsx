@@ -108,7 +108,7 @@ const INITIAL_BANKS = [
   { id: 'fubon_new', name: { zh: '富邦銀行 (新)', en: 'Fubon (New)' }, stockCode: '0636', domain: 'www.fubonbank.com.hk', url: 'https://www.fubonbank.com.hk/', rates: { HKD: { '3m': 2.05, '6m': 2.05, '12m': 2.2 } }, minDeposit: 500000, type: 'trad', conditions: { zh: '新資金', en: 'New Funds' }, color: 'bg-red-500' },
   { id: 'ant_retail', name: { zh: '螞蟻 Ant Bank', en: 'Ant Bank' }, stockCode: 'VB07', domain: 'www.antbank.hk', url: 'https://www.antbank.hk/rates?lang=en_us', rates: { HKD: { '3m': 1.8, '6m': 2.2, '12m': 2.5 } }, minDeposit: 1, type: 'virt', conditions: { zh: '新資金', en: 'New Funds' }, color: 'bg-blue-950' },
   { id: 'welab_bank', name: { zh: 'WeLab Bank', en: 'WeLab Bank' }, stockCode: 'VB08', domain: 'www.welab.bank', url: 'https://www.welab.bank/en/feature/gosave_2/', rates: { HKD: { '3m': 2.2, '6m': 2.4, '12m': 2.25 } }, minDeposit: 10, type: 'virt', conditions: { zh: 'GoSave 2.0', en: 'GoSave 2.0' }, color: 'bg-purple-600' },
-  { id: 'ncb_hk_500k', name: { zh: '南洋商業銀行', en: 'Nanyang Commercial Bank' }, stockCode: 'NCB', domain: 'www.ncb.com.hk', url: 'https://www.ncb.com.hk/nanyang_bank/eng/html/14ac.html', rates: { HKD: { '3m': 0.01, '6m': 0.01, '12m': 0.01 } }, minDeposit: 500000, type: 'trad', conditions: { zh: '50萬或以上', en: '500k+' }, color: 'bg-green-700' },
+  { id: 'ncb_hk_500k', name: { zh: '南洋商業銀行', en: 'Nanyang Commercial Bank' }, stockCode: 'NCB', domain: 'www.ncb.com.hk', url: 'https://www.ncb.com.hk/nanyang_bank/eng/html/14ac.html', rates: { HKD: { '3m': 1.00, '6m': 1.00, '12m': 1.00 } }, minDeposit: 500000, type: 'trad', conditions: { zh: '50萬或以上', en: '500k+' }, color: 'bg-green-700' },
 ];
 
 export default function App() {
