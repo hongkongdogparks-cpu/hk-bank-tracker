@@ -3,8 +3,8 @@ name: Sync Rates from CSV
 on:
   push:
     paths:
-      - 'rates.csv'         # 僅監控根目錄下的 rates.csv
-  workflow_dispatch:        # 允許在 GitHub UI 手動執行
+      - 'rates.csv'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -16,12 +16,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install firebase-admin
+      - name: Install Dependencies
+        run: npm install firebase-admin --no-audit --prefer-offline
 
       - name: Run CSV Updater
         run: node csv_updater.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_ID: ${{ vars.APP_ID || 'hk-fd-tracker-pro' }}
