@@ -54,7 +54,8 @@ const T = {
     backToDash: '返回看板',
     exampleLabel: '💡 情境實例：',
     clickToExpand: '點擊展開教學案例',
-    officialGuide: '官方指南'
+    officialGuide: '官方指南',
+    seoDesc: '全港最快、最齊的港元定期存款利率比較工具，涵蓋各大傳統及虛擬銀行最新高息優惠。'
   },
   en: {
     nav: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Yield Master', glossary: 'Glossary' },
@@ -78,7 +79,8 @@ const T = {
     backToDash: 'Back to Dashboard',
     exampleLabel: '💡 Illustrative Example:',
     clickToExpand: 'Click to expand case study',
-    officialGuide: 'Official Guide'
+    officialGuide: 'Official Guide',
+    seoDesc: 'Compare the best HKD fixed deposit rates (3M/6M/12M) across all Hong Kong traditional and virtual banks.'
   },
 };
 
@@ -88,7 +90,7 @@ const GLOSSARY_DATA = [
   { term_zh: '新資金 (New Funds)', term_en: 'New Funds', zh_desc: '銀行定義為比起某特定參考日新增的結餘。', en_desc: 'Incremental balance increase compared to a specific date.', link: null, zh_ex: '原本有 10 萬，額外存入 20 萬，這 20 萬才享有高息優惠。', en_ex: 'Only the net increase in your balance qualifies for promo rates.' },
   { term_zh: '流動性 (Liquidity)', term_en: 'Liquidity', zh_desc: '資產轉化為現金的速度與成本。', en_desc: 'The ease of converting assets into cash without loss.', link: null, zh_ex: '若將所有錢放 12M 定存，急用錢時提早提取會損失所有利息，這即是流動性處罰。', en_ex: 'Emergency early withdrawal from an FD usually wipes out all interest profit.' },
   { term_zh: '牌照利率 (Board Rate)', term_en: 'Board Rate', zh_desc: '銀行基礎掛牌利率，通常極低（如 0.1%）。', en_desc: 'Standard base rate without any promotional offers.', link: null, zh_ex: '4% 到期後自動續存可能降至 0.1%，收益縮水 40 倍。', en_ex: 'Auto-rollover often reverts to 0.1%, a 40x drop from promo rates.' },
-  { term_zh: '存款保障計劃 (DPS)', term_en: 'Deposit Protection Scheme (DPS)', zh_desc: '法例保障銀行倒閉時最高賠付 80 萬港元。', en_desc: 'Statutory protection up to HKD 800,000 per bank.', link: 'https://www.dps.org.hk/tc/index.html', zh_ex: '在虛擬銀行存 50 萬，即使該行結業，政府保證賠付。', en_ex: 'If an HK bank fails, the government guarantees repayment up to 800k.' },
+  { term_zh: '存款保障計劃 (DPS)', term_en: 'Deposit Protection Scheme (DPS)', zh_desc: '法例保障銀行倒閉時存款人最高獲賠 80 萬港元。', en_desc: 'Statutory protection up to HKD 800,000 per bank.', link: 'https://www.dps.org.hk/tc/index.html', zh_ex: '在虛擬銀行存 50 萬，即使該行結業，政府保證賠付。', en_ex: 'If an HK bank fails, the government guarantees repayment up to 800k.' },
   { term_zh: '大額即時結算 (CHATS)', term_en: 'CHATS (RTGS)', zh_desc: '用於銀行間大額資金即時清算的系統。', en_desc: 'Real-time settlement for high-value interbank transfers.', link: 'https://www.hkicl.com.hk/chi/services/rtgs_systems/hong_kong_dollar_rtgs_system.php', zh_ex: '轉帳 200 萬以上時，可用 CHATS 在數小時內安全入賬。', en_ex: 'Use CHATS for large sums (>1M) that exceed daily FPS limits.' },
   { term_zh: '轉數快 (FPS)', term_en: 'Faster Payment System (FPS)', zh_desc: '香港即時跨行轉賬系統。', en_desc: 'HK\'s 24/7 instant interbank transfer system.', link: 'https://www.fps.hk/tc/', zh_ex: '定存到期後，可用 FPS 免費轉帳到他行獲取高息。', en_ex: 'Move funds between banks instantly for free to catch new rates.' },
   { term_zh: '複利 (Compound Interest)', term_en: 'Compound Interest', zh_desc: '利息併入本金滾動計算。', en_desc: 'Interest calculated on both principal and accumulated interest.', link: 'https://www.ifec.org.hk/sid/tc/money-management/compound-interest.shtml', zh_ex: '到期後將利息併入本金重新存入，下期收益變大。', en_ex: 'Reinvesting interest quarterly compounds your future returns.' },
@@ -124,20 +126,29 @@ export default function App() {
   const t = T[lang];
   const lK = lang === 'zh_TW' ? 'zh' : 'en';
 
+  // 1. 動態 SEO 與標題優化
+  useEffect(() => {
+    document.title = `${t.title} | ${t.subtitle}`;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', t.seoDesc);
+  }, [lang, t]);
+
+  // 2. 驗證優先 (Fix for permission errors)
   useEffect(() => {
     if (!auth) return;
-    const handleAuth = async () => {
+    const initAuth = async () => {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
         } else { await signInAnonymously(auth); }
       } catch (err) { console.error('Auth issue...'); }
     };
-    handleAuth();
+    initAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
   }, []);
 
+  // 3. 數據監聽器
   useEffect(() => {
     if (!user || !db) return;
     const ratesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'live_rates');
@@ -164,7 +175,10 @@ export default function App() {
   const sortedBanks = useMemo(() => {
     const q = searchQuery.toLowerCase();
     return banks
-      .filter(b => (b.name.zh + b.name.en + b.stockCode).toLowerCase().includes(q))
+      .filter(b => {
+        const bankName = (lang === 'zh_TW' ? b.name.zh : b.name.en).toLowerCase();
+        return bankName.includes(q) || b.stockCode.toLowerCase().includes(q);
+      })
       .filter(b => filterType === 'all' || b.type === filterType)
       .sort((a, b) => {
         if (sortBy === 'rate') {
@@ -174,14 +188,14 @@ export default function App() {
         }
         return a.stockCode.localeCompare(b.stockCode);
       });
-  }, [banks, tenor, searchQuery, filterType, sortBy]);
+  }, [banks, tenor, searchQuery, filterType, sortBy, lang]);
  
   const calcReturn = (rate) => {
     if (!rate || !amount) return 0;
     const n = Number(rate) / 100;
     if (isCompound) {
-      const times = { '3m': 4, '6m': 2, '12m': 1 }[tenor];
-      return Math.floor(amount * (Math.pow(1 + n / times, times) - 1));
+      const timesPerYear = { '3m': 4, '6m': 2, '12m': 1 }[tenor];
+      return Math.floor(amount * (Math.pow(1 + n / timesPerYear, timesPerYear) - 1));
     } else {
       const m = { '3m': 0.25, '6m': 0.5, '12m': 1 }[tenor];
       return Math.floor(amount * n * m);
@@ -260,13 +274,13 @@ export default function App() {
       header: '賺盡利息：致富大攻略',
       ladderDesc: '策略：將 30 萬拆成 3 份。每 3 個月您都有一筆錢到期。到期後續期為新的 12M。最終狀態：您每年享有 12M 的最高長息，但每 3 個月就有資金解鎖可用。',
       rolloverTitle: '拒絕牌照利率 (Stop Rollover)',
-      rolloverDesc: '為什麼你需要提醒？銀行預設會在你定存到期後，按當時極低的「牌照利率」（通常僅 0.1%）自動續期。這是一場對使用者「健忘」與「惰性」的利潤收割。正確做法是設為「本息入賬」，並利用本站工具將日期存入日曆。到期當天重新掃描全港最高息，搬錢重新獲得「新資金」資格，利潤能增加 10 倍以上。',
+      rolloverDesc: '為什麼你必須設置到期提醒？銀行獲取利潤的一大來源，正是利用客戶對瑣碎日期的「遺忘」。定存到期若無指令，預設會進入「自動轉展」程序，這時採用的往往是極低的「牌照利率」（通常低至 0.1%），這比推廣利率低了近 40 倍。這本質上是銀行在收割使用者的健忘與操作惰性。通過設置日曆提醒，你可以在資金解鎖的當天，精準地將資金搬往另一家銀行以重新獲取「新資金」高息。這一分鐘的日曆設置，換來的是利潤空間的十倍飛躍。',
       rolloverPoints: ['利潤收割陷阱', '記憶力對抗', '搬錢獲取高息']
     } : {
       header: 'Wealth Hacks: Yield Master',
       ladderDesc: 'Strategy: Split $300k into 3 parts. Every 3 months, a portion matures. Rollover it into a new 12M bucket. Result: Maximize long-term yields with quarterly liquidity.',
       rolloverTitle: 'Stop the Rollover Trap',
-      rolloverDesc: 'Why you need reminders? Banks default to auto-renewing your funds at the miserable ~0.1% Board Rate. This is a harvest of user forgetfulness. By setting a calendar alert and manually re-scanning the market on maturity, you can transfer funds to re-qualify for "New Fund" promos, boosting your net return by over 10x.',
+      rolloverDesc: 'Why you absolutely need reminders? Banks profit heavily from user forgetfulness. By default, funds rollover at the miserable ~0.1% Board Rate—nearly 40 times lower than promo rates. This is a deliberate "harvest" of your inertia. Setting a calendar reminder allows you to reclaim control of your capital on the exact day it unlocks, enabling you to transfer funds and re-qualify for "New Fund" promos. A one-minute task that results in a 10x yield boost.',
       rolloverPoints: ['Profit Harvest Trap', 'Combat Forgetfulness', 'New Fund Re-qualification']
     };
 
@@ -388,7 +402,7 @@ export default function App() {
           <div className="col-span-12 lg:col-span-9">
             {currentPage === 'dashboard' && (
               <div className="space-y-3">
-                <div className="bg-white rounded-3xl border border-slate-200 p-5 flex flex-wrap gap-6 items-center animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 flex flex-wrap gap-8 items-center animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
                   <div className="flex-1 min-w-[180px]">
                     <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mb-1"><Wallet size={12} className="text-blue-500" /> {t.amountLabel}</label>
                     <div className="flex items-center border-b-2 border-slate-50 focus-within:border-blue-500 transition-colors pb-1">
