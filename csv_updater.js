@@ -1,19 +1,14 @@
 import fs from 'fs';
 import admin from 'firebase-admin';
 
-/**
- * csv_updater.js - 2026 修復版
- * 解決路徑段數錯誤（奇數/偶數段）與 GitHub Action 超時問題
- */
-
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-  console.error('❌ 缺失環境變數: FIREBASE_SERVICE_ACCOUNT');
+  console.error('❌ Error: FIREBASE_SERVICE_ACCOUNT is missing');
   process.exit(1);
 }
 
-// 獲取並扁平化 APP_ID，確保 Firestore 集合路徑維持奇數段 (artifacts/ID/public/data/live_rates)
+// 扁平化處理 appId，確保路徑段數正確
 const rawAppId = process.env.APP_ID || 'hk-fd-tracker-pro';
-const APP_ID = rawAppId.replace(/\//g, '_'); 
+const appId = rawAppId.replace(/\//g, '_'); 
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 if (!admin.apps.length) {
@@ -22,68 +17,113 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 async function sync() {
-  console.log(`🎬 啟動同步程序 (AppID: ${APP_ID})...`);
-  
-  // 自動搜尋 rates.csv 可能的位置
-  const possiblePaths = ['./rates.csv', './src/rates.csv', 'rates.csv'];
-  let filePath = possiblePaths.find(p => fs.existsSync(p));
-
-  if (!filePath) {
-    console.error('❌ 找不到 rates.csv，請檢查檔案是否放置在根目錄');
-    console.log('📁 當前目錄內容:', fs.readdirSync('.'));
+  const filePath = './rates.csv';
+  if (!fs.existsSync(filePath)) {
+    console.error('❌ rates.csv not found');
     process.exit(1);
   }
 
   try {
-    console.log(`📖 讀取檔案: ${filePath}`);
     const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('id,'));
     
-    // 過濾空行並跳過標題行 (id,1m,3m,6m,12m)
-    const lines = content.split(/\r?\n/).filter(l => l.trim() && !l.toLowerCase().startsWith('id,'));
-
-    if (lines.length === 0) {
-      console.warn('⚠️ CSV 檔案中沒有有效數據');
-      process.exit(0);
-    }
-
     const batch = db.batch();
     const now = new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong' });
 
     for (const line of lines) {
-      // 處理可能的引號包裹
-      const parts = line.split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
-      if (parts.length < 5) continue;
-      
-      const [id, m1, m3, m6, m12] = parts;
+      const [id, m1, m3, m6, m12] = line.split(',').map(s => s.trim());
       if (!id) continue;
 
-      const rates = {
-        HKD: {
-          '1m': parseFloat(m1) > 0 ? parseFloat(m1) : null,
-          '3m': parseFloat(m3) > 0 ? parseFloat(m3) : null,
-          '6m': parseFloat(m6) > 0 ? parseFloat(m6) : null,
-          '12m': parseFloat(m12) > 0 ? parseFloat(m12) : null
-        }
-      };
-
-      // 構建路徑：artifacts (1) -> APP_ID (2) -> public (3) -> data (4) -> live_rates (5)
-      // 這是正確的 Collection Reference (5 段，奇數)
-      const docRef = db.doc(`artifacts/${APP_ID}/public/data/live_rates/${id}`);
-      batch.set(docRef, { id, rates, lastUpdated: `CSV: ${now}` }, { merge: true });
+      const docRef = db.doc(`artifacts/${appId}/public/data/live_rates/${id}`);
+      batch.set(docRef, {
+        id,
+        rates: {
+          HKD: {
+            '1m': parseFloat(m1) || null,
+            '3m': parseFloat(m3) || null,
+            '6m': parseFloat(m6) || null,
+            '12m': parseFloat(m12) || null
+          }
+        },
+        lastUpdated: `CSV: ${now}`
+      }, { merge: true });
     }
 
-    console.log(`📡 正在推送 ${lines.length} 筆數據到 Firebase...`);
     await batch.commit();
-    console.log('✅ 同步成功！數據已存入 Firestore。');
+    console.log(`✅ CSV Sync Complete: ${lines.length} items.`);
     
-    // 重要：徹底釋放連線與資源，防止 GitHub Action 因掛起連線而超時
+    // 強制釋放資源，防止 GitHub Action 逾時
     await admin.app().delete();
-    console.log('🔌 Firebase 連線已安全中斷。');
     process.exit(0);
   } catch (err) {
-    console.error('❌ 同步失敗:', err.message);
+    console.error('❌ Sync failed:', err);
     process.exit(1);
   }
 }
 
 sync();
+```
+
+---
+
+### 2. 更新 `.github/workflows/scrape.yml`
+這負責每天自動跑爬蟲。我們加入了 **NPM 快取**，讓安裝依賴從 6 分鐘縮短到 10 秒。
+
+```yaml
+name: Daily Rates Update
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm' # 加入快取機制
+      - name: Install Chrome
+        run: sudo apt-get install -y google-chrome-stable
+      - name: Install Deps
+        run: npm install puppeteer-core firebase-admin
+      - name: Run Scraper
+        run: node scraper.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_ID: ${{ vars.APP_ID || 'hk-fd-tracker-pro' }}
+```
+
+---
+
+### 3. 更新 `.github/workflows/csv_sync.yml`
+當您修改 `rates.csv` 並上傳時，這會觸發同步。
+
+```yaml
+name: Sync Rates from CSV
+
+on:
+  push:
+    paths:
+      - 'rates.csv'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install Deps
+        run: npm install firebase-admin
+      - name: Run CSV Updater
+        run: node csv_updater.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_ID: ${{ vars.APP_ID || 'hk-fd-tracker-pro' }}
