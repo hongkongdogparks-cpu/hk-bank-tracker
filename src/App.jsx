@@ -11,12 +11,14 @@ import {
 // ==========================================
 const LAST_UPDATED_DATE = "2026-04-14 22:30"; 
 
-// --- Translation Dictionary ---
+// --- Translation Dictionary (Enhanced with SEO fields) ---
 const T = {
   zh_TW: {
     nav: { dashboard: '利率看板', knowledge: '新手教室', strategies: '賺息大師', glossary: '詞彙百科' },
-    title: '港元定存追蹤器',
+    title: '2026 港元定存利率比較',
     subtitle: '專業級手動監控版 (2026)',
+    seoDesc: '全港最齊 2026 港元定期存款利率比較，涵蓋滙豐、恒生、中銀、眾安等最新高息優惠與開戶獎賞。',
+    seoKeywords: '港元定存, 定期存款利率, 2026定存, 銀行高息, 虛擬銀行, 滙豐定存, 眾安利率, FD Rates HK',
     all: '全部', trad: '傳統', virt: '虛擬',
     searchPlace: '搜尋銀行、代號或帳戶等級…',
     sortRate: '按利率', sortCode: '按編號',
@@ -40,8 +42,10 @@ const T = {
   },
   en: {
     nav: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Yield Master', glossary: 'Glossary' },
-    title: 'HK FD Tracker',
+    title: 'HK Fixed Deposit Rates 2026',
     subtitle: 'Pro Manual Version (2026)',
+    seoDesc: 'Compare best HKD fixed deposit rates 2026. Real-time yield monitoring for HSBC, BOC, ZA Bank and more.',
+    seoKeywords: 'HKD FD Rates, Fixed Deposit Hong Kong 2026, Best Interest Rates, Virtual Bank HK, HSBC FD, ZA Bank',
     all: 'All', trad: 'Trad', virt: 'Virt',
     searchPlace: 'Search bank, code or tier...',
     sortRate: 'By Rate', sortCode: 'By Code',
@@ -65,7 +69,7 @@ const T = {
   },
 };
 
-// --- Financial Glossary (20 Terms) ---
+// --- Financial Glossary (Full 20 Terms) ---
 const GLOSSARY_DATA = [
   { id: 'pa', term_zh: '年利率 (Per Annum)', term_en: 'Per Annum (p.a.)', zh_desc: '以一年為基準計算的利息百分比。', en_desc: 'Standardized annual interest rate applied to deposits.', link: 'https://www.ifec.org.hk/sid/tc/money-management/savings/time-deposits.shtml', zh_ex: '即使存期只有 3 個月，標示 4% p.a. 代表存入 100 萬後，3 個月收息 1 萬 (1M * 4% / 4)。', en_ex: 'A 3M term with 4% p.a. earns $10k on $1M principal.' },
   { id: 'newfunds', term_zh: '新資金 (New Funds)', term_en: 'New Funds', zh_desc: '銀行定義為比起某特定參考日新增的結餘。', en_desc: 'Incremental balance increase compared to a specific date.', link: null, zh_ex: '原本有 10 萬，額外存入 20 萬，這 20 萬才享有高息優惠。', en_ex: 'Only fresh capital from other banks qualifies for promos.' },
@@ -89,17 +93,16 @@ const GLOSSARY_DATA = [
   { id: 'hkma', term_zh: '金管局 (HKMA)', term_en: 'HKMA', zh_desc: '香港銀行業最高監管機構。', en_desc: 'HK central banking regulator.', link: 'https://www.hkma.gov.hk/', zh_ex: '虛銀執照均由金管局發出。', en_ex: 'Ensures all HK banks follow safety regulations.' },
 ];
  
-// --- Initial Bank Data (Updated based on latest CSV) ---
+// --- Initial Bank Data ---
 const INITIAL_BANKS = [
-{ id: 'hsbc_elite', name: { zh: '滙豐 卓越尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.2, '6m': 2.0, '12m': null } }, minDeposit: 10000, type: 'trad', conditions: { zh: '新資金優惠', en: 'New Funds' }, color: 'bg-rose-600' },
-  { id: 'hsbc_premier', name: { zh: '滙豐 卓越理財', en: 'HSBC Premier' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.1, '6m': 1.9, '12m': null } }, minDeposit: 10000, type: 'trad', conditions: { zh: '卓越理財客戶', en: 'Premier' }, color: 'bg-rose-500' },
-  { id: 'hsbc_one', name: { zh: '滙豐 HSBC One', en: 'HSBC One' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.0, '6m': 1.8, '12m': null } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上辦理', en: 'Online Only' }, color: 'bg-rose-400' },
-  { id: 'hangseng_priv', name: { zh: '恒生 優越私人理財', en: 'Hang Seng Prestige Private' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: { HKD: { '3m': 2.0, '6m': 1.9, '12m': null } }, minDeposit: 10000, type: 'trad', conditions: { zh: '私人理財客戶', en: 'Private Banking' }, color: 'bg-emerald-700' },
-  { id: 'hangseng_prestige', name: { zh: '恒生 優越理財', en: 'Hang Seng Prestige' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: { HKD: { '3m': 2.0, '6m': 1.9, '12m': null } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上專享', en: 'Online Only' }, color: 'bg-emerald-600' },
-  { id: 'boc_wealth', name: { zh: '中銀理財 Private Wealth', en: 'BOC Private Wealth' }, stockCode: '2388', domain: 'www.bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: { HKD: { '3m': 2.1, '6m': 1.9, '12m': null } }, minDeposit: 1000000, type: 'trad', conditions: { zh: '高端客戶', en: 'Wealth Tier' }, color: 'bg-red-800' },
+  { id: 'hsbc_elite', name: { zh: '滙豐 卓越尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.2, '6m': 2.0, '12m': 1.8 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '新資金優惠', en: 'New Funds' }, color: 'bg-rose-600' },
+  { id: 'hsbc_premier', name: { zh: '滙豐 卓越理財', en: 'HSBC Premier' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.1, '6m': 1.9, '12m': 1.7 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '卓越理財客戶', en: 'Premier' }, color: 'bg-rose-500' },
+  { id: 'hsbc_one', name: { zh: '滙豐 HSBC One', en: 'HSBC One' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', rates: { HKD: { '3m': 2.0, '6m': 1.8, '12m': 1.6 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上辦理', en: 'Online Only' }, color: 'bg-rose-400' },
+  { id: 'hangseng_perfer', name: { zh: '恒生 優進理財', en: 'Hang Seng Preferred Banking' }, stockCode: '0011', domain: 'www.hangseng.com', url: 'https://www.hangseng.com/en-hk/personal/banking/rates/deposit-interest-rates/', rates: { HKD: { '3m': 2.2, '6m': 2.2, '12m': 2.2 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '優進理財理財客戶', en: 'Preferred Banking' }, color: 'bg-emerald-700' },
+  { id: 'boc_wealth', name: { zh: '中銀理財 Private Wealth', en: 'BOC Private Wealth' }, stockCode: '2388', domain: 'www.bochk.com', url: 'https://www.bochk.com/tc/investment/rates/deposit.html', rates: { HKD: { '3m': 2.1, '6m': 1.9, '12m': 1.7 } }, minDeposit: 1000000, type: 'trad', conditions: { zh: '高端客戶', en: 'Wealth Tier' }, color: 'bg-red-800' },
   { id: 'bea_supreme', name: { zh: '東亞 至尊理財', en: 'BEA SupremeGold' }, stockCode: '0023', domain: 'www.hkbea.com', url: 'https://www.hkbea.com/html/en/bea-personal-banking-supremegold-time-deposit.html', rates: { HKD: { '3m': 2.0, '6m': 2.2, '12m': 2.3 } }, minDeposit: 100000, type: 'trad', conditions: { zh: '高端客戶', en: 'SupremeGold' }, color: 'bg-amber-600' },
-  { id: 'icbc_wise_gold', name: { zh: '工銀 理財金', en: 'ICBC Wise Gold' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', rates: { HKD: { '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上特惠', en: 'Online Special' }, color: 'bg-red-700' },
-  { id: 'citi_gold_new', name: { zh: '花旗 New Citigold', en: 'Citi New Citigold' }, stockCode: 'US:C', domain: 'www.citibank.com.hk', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', rates: { HKD: { '3m': 2.9, '6m': null, '12m': null } }, minDeposit: 50000, type: 'trad', conditions: { zh: '新開戶', en: 'New Client' }, color: 'bg-blue-700' },
+  { id: 'icbc_wise_gold', name: { zh: '工銀 理財金', en: 'ICBC Wise Gold' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com/hk/tc/personal/latest-promotion/online-time-deposit.html', rates: { HKD: { '1m': 1.6, '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, minDeposit: 10000, type: 'trad', conditions: { zh: '網上特惠', en: 'Online Special' }, color: 'bg-red-700' },
+  { id: 'citi_gold_new', name: { zh: '花旗 New Citigold', en: 'Citi New Citigold' }, stockCode: 'US:C', domain: 'www.citibank.com.hk', url: 'https://www.citibank.com.hk/english/personal-banking/interest-and-foreign-exchange-rates/', rates: { HKD: { '3m': 2.9, '6m': 2.5, '12m': 2.0 } }, minDeposit: 50000, type: 'trad', conditions: { zh: '新開戶', en: 'New Client' }, color: 'bg-blue-700' },
   { id: 'dbs_treasures', name: { zh: '星展豐盛理財', en: 'DBS Treasures' }, stockCode: 'D05.SI', domain: 'www.dbs.com.hk', url: 'https://www.dbs.com.hk/personal/promotion/OnlineTD-promo', rates: { HKD: { '3m': 2.1, '6m': 1.95, '12m': 1.95 } }, minDeposit: 50000, type: 'trad', conditions: { zh: '網上定存', en: 'Online' }, color: 'bg-red-800' },
   { id: 'bocom_hk_pref', name: { zh: '交通銀行 優息定存', en: 'Bank of Comm' }, stockCode: '3328', domain: 'www.hk.bankcomm.com', url: 'https://www.hk.bankcomm.com/hk/shtml/hk/en/2005742/2005763/2005764/list.shtml', rates: { HKD: { '3m': 2.75, '6m': 2.75, '12m': 3.00 } }, minDeposit: 500000, type: 'trad', conditions: { zh: '50萬以上', en: '500k+' }, color: 'bg-blue-800' },
   { id: 'za_new', name: { zh: '眾安 ZA Bank (新)', en: 'ZA Bank (New)' }, stockCode: 'VB01', domain: 'bank.za.group', url: 'https://bank.za.group/hk/deposit', rates: { HKD: { '3m': 0.51, '6m': 1.61, '12m': 2.01 } }, minDeposit: 1, type: 'virt', conditions: { zh: '開戶獎賞', en: 'New Reward' }, color: 'bg-teal-600' },
@@ -119,15 +122,59 @@ export default function App() {
   const [isCompound, setIsCompound] = useState(false);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('rate'); // Re-added sort state
+  const [sortBy, setSortBy] = useState('rate'); 
   const [banks, setBanks] = useState(INITIAL_BANKS);
   const [expandedTerm, setExpandedTerm] = useState(null);
 
   const t = T[lang];
 
+  // --- NEW: SEO & Meta Optimization Logic ---
   useEffect(() => {
+    // 1. Update Title & HTML Language
     document.title = `${t.title} | ${t.subtitle}`;
-  }, [lang, t]);
+    document.documentElement.lang = lang === 'zh_TW' ? 'zh-Hant-HK' : 'en-HK';
+
+    // 2. Helper to set meta tags
+    const setMeta = (name, content) => {
+      let el = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        if (name.startsWith('og:')) el.setAttribute('property', name);
+        else el.setAttribute('name', name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    setMeta('description', t.seoDesc);
+    setMeta('keywords', t.seoKeywords);
+    setMeta('og:title', t.title);
+    setMeta('og:description', t.seoDesc);
+    setMeta('og:type', 'website');
+    setMeta('og:url', window.location.href);
+
+    // 3. JSON-LD Structured Data for Google Rich Snippets
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "FinancialProduct",
+      "name": t.title,
+      "description": t.seoDesc,
+      "provider": { "@type": "Organization", "name": "HK FD Tracker Pro" },
+      "offers": INITIAL_BANKS.slice(0, 5).map(b => ({
+        "@type": "Offer",
+        "name": b.name[lang === 'zh_TW' ? 'zh' : 'en'],
+        "price": b.rates.HKD[tenor] || 0,
+        "priceCurrency": "HKD"
+      }))
+    };
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.innerHTML = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+
+    return () => { if (document.head.contains(script)) document.head.removeChild(script); };
+  }, [lang, t, tenor]);
 
   const sortedBanks = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -150,21 +197,21 @@ export default function App() {
   const calcReturn = (rate) => {
     if (!rate || !amount) return 0;
     const n = Number(rate) / 100;
+    const m = { '3m': 0.25, '6m': 0.5, '12m': 1 }[tenor];
     if (isCompound) {
-      const times = { '1m': 12, '3m': 4, '6m': 2, '12m': 1 }[tenor];
+      const times = { '3m': 4, '6m': 2, '12m': 1 }[tenor];
       return Math.floor(amount * (Math.pow(1 + n / times, times) - 1));
     } else {
-      const m = { '1m': 1/12, '3m': 0.25, '6m': 0.5, '12m': 1 }[tenor];
       return Math.floor(amount * n * m);
     }
   };
 
   const InfoSection = ({ icon: Icon, title, points, description, bgColor, accentColor, link, linkText }) => (
-    <div className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm animate-in fade-in duration-500">
-      <div className={`${bgColor} p-6 text-white flex items-center gap-4`}>
+    <article className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm animate-in fade-in duration-500">
+      <header className={`${bgColor} p-6 text-white flex items-center gap-4`}>
         <Icon size={24} />
         <h2 className="text-xl font-black">{title}</h2>
-      </div>
+      </header>
       <div className="p-7 space-y-6">
         <div className="flex flex-wrap gap-3">
           {points.map((p, i) => (
@@ -183,51 +230,35 @@ export default function App() {
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 
-  const Classroom = () => {
-    const c = lang === 'zh_TW' ? {
-      h1: '定期存款 101 入門課',
-      t1: '什麼是定存？', t1p: ['租錢給銀行', '固定利息收益', '保本理財基石'],
-      t1d: '定存是將資金鎖定一段存期，銀行則以此換取固定利率。這是 100% 保本理財的最佳起點。',
-      t2: '虛擬銀行安全嗎？', t2p: ['金管局持牌', 'DPS 80萬保障', '監管標準一致'],
-      t2d: '虛銀與傳統銀行一樣受金管局監管，並享有存款保障計劃每人每行最高 80 萬港元的保障。',
-      t3: '利率迷思', t3p: ['資產門檻 (AUM)', '新資金定義', 'App 專享'],
-      t3d: '高利率通常附帶條件：帳戶等級、新資金（需由他行轉入）或渠道限制。',
-      t4: '匯率陷阱', t4p: ['點差損耗', '短存不利', '隱形成本'],
-      t4d: '美金高息誘人，但 0.6% 的來回換匯點差可能在 3 個月內吞噬 60% 的額外利息利潤。'
-    } : {
-      h1: 'Fixed Deposit 101',
-      t1: 'What is FD?', t1p: ['Rent Cash', 'Fixed Interest', 'Capital Safe'],
-      t1d: 'FD is renting your money to the bank for a fixed tenor in exchange for guaranteed interest.',
-      t2: 'Are Virtual Banks Safe?', t2p: ['Licensed', 'DPS (800k HKD)', 'HKMA Regulated'],
-      t2d: 'Regulated by HKMA with statutory protection up to HKD 800,000 per bank.',
-      t3: 'Rate Mystery', t3p: ['AUM Limits', 'New Funds', 'Mobile Only'],
-      t3d: 'Top rates often require specific account tiers or fresh capital from other banks.',
-      t4: 'FX Risk', t4p: ['FX Spread', 'Short Term', 'Hidden Costs'],
-      t4d: 'USD spreads can eat up to 60% of your yield advantage on a 3-month term.'
-    };
-    return (
-      <div className="space-y-6 pb-16 animate-in fade-in duration-300">
-        <section className="bg-blue-600 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-lg">
-          <HelpCircle className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
-          <h2 className="text-3xl font-black mb-2 tracking-tighter">{c.h1}</h2>
-          <p className="text-blue-100 text-[12px] font-bold uppercase tracking-widest">Education starts from zero.</p>
-        </section>
-        <InfoSection icon={BookOpen} title={c.t1} bgColor="bg-blue-500" accentColor="text-blue-500" points={c.t1p} description={c.t1d} />
-        <InfoSection icon={ShieldAlert} title={c.t2} bgColor="bg-slate-800" accentColor="text-slate-800" points={c.t2p} description={c.t2d} link="https://www.hkma.gov.hk/chi/smart-consumers/virtual-banks/" linkText={t.officialGuide} />
-        <InfoSection icon={BadgePercent} title={c.t3} bgColor="bg-indigo-600" accentColor="text-indigo-600" points={c.t3p} description={c.t3d} />
-        <InfoSection icon={Globe} title={c.t4} bgColor="bg-rose-600" accentColor="text-rose-600" points={c.t4p} description={c.t4d} />
-      </div>
-    );
-  };
+  const Classroom = () => (
+    <div className="space-y-6 pb-16 animate-in fade-in duration-300">
+      <section className="bg-blue-600 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-lg">
+        <HelpCircle className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
+        <h2 className="text-3xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '定期存款 101 入門課' : 'Fixed Deposit 101'}</h2>
+        <p className="text-blue-100 text-[12px] font-bold uppercase tracking-widest opacity-80">Education starts from zero.</p>
+      </section>
+      <InfoSection 
+        icon={BookOpen} title={lang === 'zh_TW' ? '什麼是定存？' : 'What is FD?'} bgColor="bg-blue-500" accentColor="text-blue-500" 
+        points={lang === 'zh_TW' ? ['租錢給銀行', '固定利息收益', '保本理財基石'] : ['Rent Cash', 'Fixed Interest', 'Capital Protected']} 
+        description={lang === 'zh_TW' ? '定存是將資金鎖定一段存期，銀行則以此換取固定利率。這是 100% 保本理財的最佳起點。' : 'FD is renting your money to the bank for a fixed tenor in exchange for guaranteed interest.'} 
+      />
+      <InfoSection 
+        icon={ShieldAlert} title={lang === 'zh_TW' ? '虛擬銀行安全嗎？' : 'Are Virtual Banks Safe?'} bgColor="bg-slate-800" accentColor="text-slate-800" 
+        points={lang === 'zh_TW' ? ['金管局持牌', 'DPS 80萬保障', '監管標準一致'] : ['Licensed', 'DPS (800k HKD)', 'HKMA Regulated']} 
+        description={lang === 'zh_TW' ? '香港 8 間虛銀獲金管局獲發牌，受 DPS 保障每位存款人最高 80 萬港元的保障。' : 'All 8 virtual banks in HK are licensed by HKMA and covered by DPS up to 800k HKD.'} 
+        link="https://www.hkma.gov.hk/chi/smart-consumers/virtual-banks/" linkText={t.officialGuide} 
+      />
+    </div>
+  );
 
   const YieldMaster = () => {
     const getCalendarLink = () => {
       const end = new Date(); end.setMonth(end.getMonth() + 3);
       const iso = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
-      return `https://www.google.com/calendar/render?action=TEMPLATE&text=💰+定存到期提醒&details=立刻回網站查看最新利率：https://hk-bank-tracker.vercel.app&dates=${iso(end)}/${iso(end)}`;
+      return `https://www.google.com/calendar/render?action=TEMPLATE&text=💰+定存到期提醒&details=立刻回網站查看最新利率：${window.location.href}&dates=${iso(end)}/${iso(end)}`;
     };
 
     const c = lang === 'zh_TW' ? {
@@ -257,7 +288,7 @@ export default function App() {
         <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl">
           <Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
           <h2 className="text-4xl font-black mb-2 tracking-tighter">{c.h1}</h2>
-          <p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest">Maximize your cash returns.</p>
+          <p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">Maximize your cash returns.</p>
         </section>
 
         <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
@@ -284,10 +315,10 @@ export default function App() {
                 <CalendarPlus size={48} />
                 <div className="space-y-2">
                    <h4 className="font-black text-2xl">{c.r1}</h4>
-                   <p className="text-[12px] font-bold uppercase tracking-widest">一鍵同步手機日曆</p>
+                   <p className="text-[12px] font-bold uppercase tracking-widest opacity-70">一鍵同步手機日曆</p>
                 </div>
               </div>
-              <a href={getCalendarLink()} target="_blank" className="bg-orange-600 text-white px-12 py-5 rounded-2xl font-black text-base hover:bg-orange-700 transition-all shadow-lg active:scale-95"><CalendarPlus size={24}/> {t.calendarBtn}</a>
+              <a href={getCalendarLink()} target="_blank" className="bg-orange-600 text-white px-12 py-5 rounded-2xl font-black text-base hover:bg-orange-700 transition-all shadow-lg active:scale-95 flex items-center gap-2"><CalendarPlus size={24}/> {t.calendarBtn}</a>
            </div>
            <p className="text-[14px] font-medium leading-relaxed text-orange-800">{c.rd}</p>
         </section>
@@ -303,12 +334,12 @@ export default function App() {
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
         {GLOSSARY_DATA.map((item, i) => (
-          <div key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 transition-all group shadow-sm">
+          <article key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 transition-all group shadow-sm">
             <button onClick={() => setExpandedTerm(expandedTerm === i ? null : i)} className="w-full text-left focus:outline-none">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-black text-blue-600 text-[16px] tracking-tight">
+                <h3 className="font-black text-blue-600 text-[16px] tracking-tight">
                   {lang === 'zh_TW' ? `${item.term_zh} (${item.term_en})` : item.term_en}
-                </span>
+                </h3>
                 {expandedTerm === i ? <ChevronUp size={16} className="text-slate-300" /> : <ChevronDown size={16} className="text-slate-300" />}
               </div>
               <p className="text-[13px] text-slate-500 font-bold leading-relaxed">{lang === 'zh_TW' ? item.zh_desc : item.en_desc}</p>
@@ -322,7 +353,7 @@ export default function App() {
                 )}
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
       <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-widest text-[14px] hover:bg-slate-800 transition-all shadow-lg active:scale-95">{t.backToDash}</button>
@@ -365,7 +396,7 @@ export default function App() {
           <div className="col-span-12 lg:col-span-9">
             {currentPage === 'dashboard' && (
               <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-wrap gap-10 items-center shadow-sm">
+                <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 flex flex-wrap gap-10 items-center shadow-sm">
                   <div className="flex-1 min-w-[220px]">
                     <label className="text-[12px] font-black text-slate-400 uppercase flex items-center gap-2 mb-2 tracking-widest"><Wallet size={16} className="text-blue-500" /> {t.amountLabel}</label>
                     <div className="flex items-center border-b-4 border-slate-50 focus-within:border-blue-500 transition-colors pb-2">
@@ -376,12 +407,12 @@ export default function App() {
                   <div className="w-full md:w-auto">
                     <label className="text-[12px] font-black text-slate-400 uppercase flex items-center gap-2 mb-3 tracking-widest"><CalendarDays size={16} className="text-blue-500" /> {t.tenorLabel}</label>
                     <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-2">
-                      {['1m', '3m', '6m', '12m'].map(m => (
+                      {['3m', '6m', '12m'].map(m => (
                         <button key={m} onClick={() => setTenor(m)} className={`px-10 py-3 rounded-xl text-sm font-black transition-all ${tenor === m ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-200'}`}>{m.toUpperCase()}</button>
                       ))}
                     </div>
                   </div>
-                </div>
+                </section>
 
                 <div className="grid gap-3">
                    <div className="flex flex-wrap gap-3 items-center mb-2">
@@ -390,7 +421,6 @@ export default function App() {
                       <input type="text" placeholder={t.searchPlace} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold outline-none text-[13px] shadow-sm focus:ring-4 focus:ring-blue-50" />
                     </div>
                     
-                    {/* Re-added Sort Functionality */}
                     <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm gap-1">
                       <button onClick={() => setSortBy('rate')} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all flex items-center gap-2 ${sortBy === 'rate' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}><SortAsc size={14}/> {t.sortRate}</button>
                       <button onClick={() => setSortBy('code')} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${sortBy === 'code' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-50'}`}>{t.sortCode}</button>
@@ -408,16 +438,17 @@ export default function App() {
                     const r = bank.rates?.HKD?.[tenor];
                     const hasR = r != null && r > 0;
                     const belowMin = amount < bank.minDeposit;
+                    const bName = lang === 'zh_TW' ? bank.name.zh : bank.name.en;
                     return (
-                      <div key={bank.id} className={`group bg-white rounded-3xl border border-slate-200 p-4 px-6 flex flex-wrap items-center gap-6 transition-all hover:shadow-xl hover:border-blue-300 ${belowMin ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                      <article key={bank.id} className={`group bg-white rounded-3xl border border-slate-200 p-4 px-6 flex flex-wrap items-center gap-6 transition-all hover:shadow-xl hover:border-blue-300 ${belowMin ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                         <div className={`w-1.5 h-12 rounded-full ${bank.color} opacity-80 transition-opacity`}></div>
                         <div className="flex items-center gap-5 min-w-[320px] flex-1">
                           <div className="w-12 h-12 rounded-2xl bg-slate-50 p-2 border border-slate-100 flex items-center justify-center shrink-0 shadow-inner">
-                            <img src={`https://www.google.com/s2/favicons?sz=64&domain=${bank.domain}`} className="w-full h-full object-contain" alt="" />
+                            <img src={`https://www.google.com/s2/favicons?sz=64&domain=${bank.domain}`} alt={`${bName} Logo`} className="w-full h-full object-contain" />
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                              <h3 className="font-black text-[17px] tracking-tight text-slate-800">{lang === 'zh_TW' ? bank.name.zh : bank.name.en}</h3>
+                              <h3 className="font-black text-[17px] tracking-tight text-slate-800">{bName}</h3>
                               <span className="text-[11px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded-lg uppercase">{bank.stockCode}</span>
                             </div>
                             <div className="flex flex-wrap items-center gap-4 text-slate-400 font-bold text-[11px] uppercase tracking-wider">
@@ -439,9 +470,9 @@ export default function App() {
                             <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-1">{t.interestLabel}</p>
                             <p className={`text-2xl font-black tabular-nums leading-none ${hasR ? 'text-emerald-500' : 'text-slate-100'}`}>{hasR ? `+${calcReturn(r).toLocaleString()}` : '--'}</p>
                           </div>
-                          <a href={bank.url} target="_blank" rel="noreferrer" className="p-4 bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm shrink-0"><ArrowUpRight size={20} /></a>
+                          <a href={bank.url} target="_blank" rel="noreferrer" title={`Visit ${bName} Site`} className="p-4 bg-slate-50 text-slate-300 hover:bg-blue-600 hover:text-white rounded-2xl transition-all shadow-sm shrink-0"><ArrowUpRight size={20} /></a>
                         </div>
-                      </div>
+                      </article>
                     );
                   })}
                 </div>
@@ -468,7 +499,7 @@ export default function App() {
                   <a href="https://www.hkma.gov.hk/" target="_blank" className="hover:text-blue-500 transition-colors">HKMA 金管局</a>
                   <a href="https://www.dps.org.hk/" target="_blank" className="hover:text-blue-500 transition-colors">DPS 存保會</a>
                 </div>
-                <span className="flex items-center gap-3 font-bold uppercase tracking-widest">V12.0 Final Layout • {LAST_UPDATED_DATE} Update</span>
+                <span className="flex items-center gap-3 font-bold uppercase tracking-widest">V15.0 SEO Pro • {LAST_UPDATED_DATE} Update</span>
               </div>
             </footer>
           </div>
@@ -478,7 +509,7 @@ export default function App() {
               <div className="bg-white border-2 border-dashed border-slate-300 rounded-[2.5rem] p-6 flex flex-col items-center min-h-[600px] shadow-sm text-center">
                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-6">{t.adLabel}</p>
                 <div className="w-full flex-1 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-center p-6">
-                  <span className="text-[12px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">AdSense Vertical Skyscraper</span>
+                  <span className="text-[12px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">AdSense Area</span>
                 </div>
               </div>
             </div>
