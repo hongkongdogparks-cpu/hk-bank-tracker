@@ -9,6 +9,31 @@ import {
   ArrowDownAZ, MessageCircle, Link2
 } from 'lucide-react';
 
+// --- Security Styles ---
+const watermarkStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  pointerEvents: 'none',
+  zIndex: 9999,
+  opacity: 0.03,
+  fontSize: '24px',
+  fontWeight: 'black',
+  display: 'flex',
+  flexWrap: 'wrap',
+  content: '"HK RATES TRACKER PRO"',
+  overflow: 'hidden',
+  userSelect: 'none',
+};
+
+const printStyle = `
+  @media print {
+    body { display: none !important; }
+  }
+`;
+
 // --- Global Date Constants ---
 const LAST_UPDATED_DATE = "2026-04-15 10:00";
 
@@ -375,6 +400,49 @@ const AdSensePlaceholder = ({ type, className = "" }) => (
 );
 
 export default function App() {
+  // --- ADD START ---
+  useEffect(() => {
+    // 1. Prevent Right Click and Copy
+    const preventAction = (e) => {
+      e.preventDefault();
+      alert("Security Alert: Copying and right-clicking are disabled to protect manual data integrity.");
+    };
+
+    // 2. Anti-Print Screen / Anti-Tab Switching Blur
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        document.body.style.filter = 'blur(20px)';
+      } else {
+        document.body.style.filter = 'none';
+      }
+    };
+
+    document.addEventListener('contextmenu', preventAction);
+    document.addEventListener('copy', preventAction);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+// Ultimate Deterrent: Pauses the browser if they open Inspect Element
+    const interval = setInterval(() => {
+      const startTime = performance.now();
+      debugger;
+      const endTime = performance.now();
+      if (endTime - startTime > 100) {
+        // DevTools is likely open
+        document.body.innerHTML = "<h1>Developer Tools Detected. Please close them to view rates.</h1>";
+        window.location.reload();
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval); // Stop the loop when component unmounts
+      document.removeEventListener('contextmenu', preventAction);
+      document.removeEventListener('contextmenu', preventAction);
+      document.removeEventListener('copy', preventAction);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+  // --- ADD END ---
+
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [lang, setLang] = useState('zh_TW');
   const [tenor, setTenor] = useState('3m');
@@ -954,7 +1022,7 @@ const dashboardView = (
         {/* Right Side: Rate and Returns */}
         <div className="flex items-center gap-6 md:gap-10 shrink-0 ml-auto">
           <div className="w-16 text-right leading-tight">
-            <p className="text-[15px] font-black text-slate-900">{r.toFixed(3)}%</p>
+            <p className="text-[15px] font-black text-slate-900"> {r.toFixed(3).split('').map((char, i) => <span key={i}>{char}</span>)}% </p>
           </div>
           <div className="w-24 text-right">
             {belowMin ? (
@@ -985,7 +1053,12 @@ const dashboardView = (
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans antialiased pb-20 selection:bg-blue-100">
+    <div className="min-h-screen bg-[#FDFDFF] text-slate-900 font-sans antialiased pb-20 selection:bg-blue-100 select-none">
+      <style>{printStyle}</style>
+      {/* Watermark Overlay */}
+      <div style={watermarkStyle} className="grid grid-cols-4 gap-20 p-20 uppercase tracking-[1em] rotate-[-25deg]">
+        {Array(40).fill("HK RATES TRACKER ").map((text, i) => <span key={i}>{text}</span>)}
+      </div>
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
@@ -1164,6 +1237,10 @@ const dashboardView = (
                   <div className="flex flex-col sm:flex-row sm:items-center gap-6 pt-4 text-slate-400 font-bold">
                       <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-500" /> {t.manualRetrieved}本站利率數據由人工收集。The rate data on this site is collected manually.</span>
                       <div className="flex items-center gap-2"><Mail size={16} className="text-blue-500" /> {t.inquiryEmail}: hongkongrates@gmail.com</div>
+                      {/* Bot Trap: Do not remove. Invisible to humans. */}
+                  <a href="/legal/scraping-policy" style={{ display: 'none' }} tabIndex="-1" aria-hidden="true">
+                    Authorized Data Access Point
+                  </a>
                   </div>
               </div>
               <div className="pt-8 mt-8 border-t flex flex-col gap-4">
