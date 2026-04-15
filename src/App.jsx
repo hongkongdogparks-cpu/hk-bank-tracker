@@ -24,17 +24,186 @@ const LAST_UPDATED_DATE = getDisplayDate();
 
 // --- Glossary Data ---
 const GLOSSARY_DATA = [
-  { id: 'pa', term_zh: '年利率 (Per Annum)', term_en: 'Per Annum (p.a.)', zh_desc: '以一年為基準計算的利息百分比。', en_desc: 'Standardized annual interest rate applied to deposits.', zh_ex: '即使存期只有 3 個月，標示 4% p.a. 代表存入 100 萬後，3 個月收息 1 萬。', en_ex: 'A 3M term with 4% p.a. earns $10k on $1M principal.' },
-  { id: 'apy', term_zh: '實際年回報 (APY)', term_en: 'Annual Percentage Yield', zh_desc: '考慮到複利效應後的真實年化收益率。', en_desc: 'The real rate of return on a savings deposit including compound interest.', zh_ex: '若每月派息並滾存，APY 會略高於標示的年利率 p.a.。', en_ex: 'Compounding monthly results in a higher APY than the quoted p.a.' },
-  { id: 'newfunds', term_zh: '新資金 (New Funds)', term_en: 'New Funds', zh_desc: '銀行定義為比起某特定參考日新增的結餘。', en_desc: 'Incremental balance increase compared to a specific date.', zh_ex: '原本有 10 萬，額外存入 20 萬，這 20 萬才享有高息優惠。', en_ex: 'Only fresh capital qualifies for promos.' },
-  { id: 'liq', term_zh: '流動性 (Liquidity)', term_en: 'Liquidity', zh_desc: '資產轉化為現金的速度與成本。', en_desc: 'Ease of converting assets to cash without loss.', zh_ex: '全放定存，急用錢時提早提取會損失利息。', en_ex: 'Early withdrawal usually wipes out your entire interest profit.' },
-  { id: 'board', term_zh: '牌照利率 (Board Rate)', term_en: 'Board Rate', zh_desc: '銀行基礎掛牌利率，通常極低（如 0.1%）。', en_desc: 'Standard base rate without any promotional offers.', zh_ex: '4% 到期後自動續存可能降至 0.1%。', en_ex: 'Default rate for rollovers, often 40x lower than promo rates.' },
-  { id: 'dps', term_zh: '存款保障計劃 (DPS)', term_en: 'Deposit Protection (DPS)', zh_desc: '法例保障每人每行最高獲賠 80 萬港元。', en_desc: 'Statutory protection up to HKD 800,000 per bank.', zh_ex: '即使銀行結業，政府保證賠付首 80 萬本金級利息。', en_ex: 'Government guarantee per bank in case of bank failure.' },
-  { id: 'hibor', term_zh: 'HIBOR (同業拆息)', term_en: 'HIBOR', zh_desc: '銀行之間互相借貸港元的利率指標。', en_desc: 'Hong Kong Interbank Offered Rate.', zh_ex: 'HIBOR 升代表銀行資金成本增加，定存息通常隨後上調。', en_ex: 'Benchmark for local lending and deposit pricing.' },
-  { id: 'aum', term_zh: 'AUM (總資產值)', term_en: 'AUM', zh_desc: '你在銀行持有的所有資產總值（包括存款、證券、保險）。', en_desc: 'Assets Under Management.', zh_ex: '高端帳戶通常要求 AUM 達 100 萬以享受更高年利率。', en_ex: 'Total relationship balance with the bank.' },
-  { id: 'fps', term_zh: '轉數快 (FPS)', term_en: 'Faster Payment System (FPS)', zh_desc: '香港 24/7 即時跨行轉賬系統。', en_desc: 'HK\'s instant interbank transfer system.', zh_ex: '用 FPS 將到期本金即時轉至高息銀行開新單。', en_ex: 'Move funds between banks instantly and for free.' },
-  { id: 'chats', term_zh: '大額結算 (CHATS)', term_en: 'CHATS', zh_desc: '用於大額港元即時清算的銀行同業系統。', en_desc: 'Real-time settlement for high-value HKD transfers.', zh_ex: '轉帳超過 100 萬時，CHATS 比 FPS 更適合處理大額結算。', en_ex: 'Used for professional large-scale settlements.' },
-  { id: 'comp', term_zh: '複利 (Compound Interest)', term_en: 'Compound Interest', zh_desc: '俗稱利滾利，利息本身產生的利息。', en_desc: 'Interest calculated on the principal plus accumulated interest.', zh_ex: '每個月派息後立即滾存，本金基礎會不斷變大。', en_ex: 'Earn interest on your interest.' },
+  { 
+    id: 'pa', 
+    term_zh: '年利率 (Per Annum)', 
+    term_en: 'Per Annum (p.a.)', 
+    zh_desc: '以一年為基準計算的利息百分比。所有持牌銀行均須遵守 HKMA 《銀行營運守則》進行利率披露。', 
+    en_desc: 'Standardized annual interest rate. Authorized Institutions must follow the HKMA Code of Banking Practice for disclosure.', 
+    zh_ex: '標示 4% p.a. 代表存入 100 萬後，3 個月收息約 1 萬。', 
+    en_ex: 'A 4% p.a. rate earns ~$10k on $1M principal over 3 months.' 
+  },
+  { 
+    id: 'apy', 
+    term_zh: '實際年回報 (APY)', 
+    term_en: 'Annual Percentage Yield', 
+    zh_desc: '考慮到複利效應後的真實年化收益率。詳情參閱 HKMA 關於有效年利率 (APR) 的指引。', 
+    en_desc: 'The real rate of return including compound interest. Refer to HKMA guidelines on Annualised Percentage Rates (APR).', 
+    zh_ex: '若每月派息並滾存，APY 會略高於標示的 p.a.。', 
+    en_ex: 'Compounding monthly results in a higher APY than the quoted p.a.' 
+  },
+  { 
+    id: 'hibor', 
+    term_zh: 'HIBOR (同業拆息)', 
+    term_en: 'HIBOR', 
+    zh_desc: '香港銀行同業拆息，由財資市場公會 (TMA) 每日公佈，是本地貸款與存款定價的重要基準。', 
+    en_desc: 'Hong Kong Interbank Offered Rate. Published daily by the TMA; it is a key benchmark for HKD pricing.', 
+    zh_ex: '當 1M HIBOR 升至 5%，銀行通常會調高定存息以吸引資金。', 
+    en_ex: 'Banks often hike FD rates when 1M HIBOR hits 5%.' 
+  },
+  { 
+    id: 'dps', 
+    term_zh: '存款保障計劃 (DPS)', 
+    term_en: 'Deposit Protection (DPS)', 
+    zh_desc: '根據法例，保障每名存款人在每家銀行最高獲賠 80 萬港幣。詳見香港存款保障委員會 (dps.org.hk)。', 
+    en_desc: 'Statutory protection up to HKD 800,000 per depositor per bank. Managed by the HKDPB (dps.org.hk).', 
+    zh_ex: '即使銀行結業，政府保證賠付首 80 萬本金及利息。', 
+    en_ex: 'Statutory guarantee for the first 800k of your deposit.' 
+  },
+  { 
+    id: 'base_rate', 
+    term_zh: '基本利率 (Base Rate)', 
+    term_en: 'Base Rate', 
+    zh_desc: 'HKMA 用作計算貼現窗交易的貼現率。通常隨美國聯邦基金利率調整。詳見 HKMA 貨幣政策。', 
+    en_desc: 'The base for determining the Discount Rate at HKMA. Usually follows the US Fed funds rate.', 
+    zh_ex: '聯儲局加息後，HKMA 通常會立即同步上調基本利率。', 
+    en_ex: 'HKMA adjusts the Base Rate in tandem with US Fed hikes.' 
+  },
+  { 
+    id: 'lcr', 
+    term_zh: '流動性覆蓋比率 (LCR)', 
+    term_en: 'Liquidity Coverage Ratio', 
+    zh_desc: '銀行須持有充足流動資產以應付 30 天壓力期。受 HKMA 《流動性規則》監管。', 
+    en_desc: 'Requirement for banks to hold liquid assets for 30-day stress. Governed by HKMA Banking Rules.', 
+    zh_ex: '季結時銀行為符合 LCR 要求，往往會大幅加息「搶錢」。', 
+    en_ex: 'Banks hike rates at quarter-ends to meet LCR requirements.' 
+  },
+  { 
+    id: 'linked_exchange', 
+    term_zh: '聯繫匯率制度', 
+    term_en: 'Linked Exchange Rate', 
+    zh_desc: '將港元匯率固定在 7.75 至 7.85 兌 1 美元的範圍。詳見 HKMA 聯繫匯率簡介。', 
+    en_desc: 'The system anchoring HKD to USD within 7.75-7.85. See HKMA Linked Exchange Rate System.', 
+    zh_ex: '聯匯制度令港元利率大致跟隨美元利率走勢。', 
+    en_ex: 'HKD rates generally follow USD trends due to the peg.' 
+  },
+  { 
+    id: 'ncd', 
+    term_zh: '可轉讓存款證 (NCD)', 
+    term_en: 'Negotiable CD', 
+    zh_desc: '可在二級市場買賣的定存產品，流動性高於一般定存。受持牌銀行發行。', 
+    en_desc: 'A certificate of deposit that can be traded in secondary markets, issued by Authorized Institutions.', 
+    zh_ex: '如需現款，可將 NCD 賣給其他投資者而毋須斷單罰息。', 
+    en_ex: 'Sell your NCD to others if you need cash before maturity.' 
+  },
+  { 
+    id: 'chats', 
+    term_zh: '大額結算 (CHATS)', 
+    term_en: 'CHATS', 
+    zh_desc: '香港銀行同業即時支付系統，處理大額及具時效性的轉賬。由 HKICL 營運。', 
+    en_desc: 'The RTGS system in HK for high-value interbank settlements. Operated by HKICL.', 
+    zh_ex: '轉賬超過 100 萬時，CHATS 比 FPS 更適合處理大額結算。', 
+    en_ex: 'Preferred for transfers >$1M upon deposit maturity.' 
+  },
+  { 
+    id: 'mmf', 
+    term_zh: '貨幣市場基金 (MMF)', 
+    term_en: 'Money Market Fund', 
+    zh_desc: '投資於短期債務工具的基金，追求流動性及利息。受 SFC 證監會監管。', 
+    en_desc: 'Funds investing in short-term debt instruments. Governed by the SFC in Hong Kong.', 
+    zh_ex: 'MMF 提供近似定存的息率，但資金到賬只需 T+0 或 T+1。', 
+    en_ex: 'MMF offers FD-like yields with much higher liquidity.' 
+  },
+  { 
+    id: 'capital_adequacy', 
+    term_zh: '資本充足比率 (CAR)', 
+    term_en: 'Capital Adequacy Ratio', 
+    zh_desc: '衡量銀行資本與風險加權資產的比率。HKMA 根據《巴塞爾協定三》設定最低要求。', 
+    en_desc: 'Measures bank capital against risk-weighted assets. Set by HKMA under Basel III standards.', 
+    zh_ex: '高 CAR 代表銀行更穩健，但也可能限制其高息吸金的額度。', 
+    en_ex: 'A high CAR indicates a safer bank with stronger buffers.' 
+  },
+  { 
+    id: 'floating_rate', 
+    term_zh: '浮動利率', 
+    term_en: 'Floating Rate', 
+    zh_desc: '隨基準利率（如 HIBOR 或 P-Rate）變動的利率。詳見 TMA 基準利率說明。', 
+    en_desc: 'Interest rates that adjust with benchmarks like HIBOR. See TMA Benchmark references.', 
+    zh_ex: '浮息存款可讓你在加息週期自動獲得更高回報。', 
+    en_ex: 'Floating rate deposits increase your yield automatically during hikes.' 
+  },
+  { 
+    id: 'p_rate', 
+    term_zh: '最優惠利率 (P-Rate)', 
+    term_en: 'Prime Rate', 
+    zh_desc: '銀行自定的貸款基準利率，亦影響儲蓄利率。不同銀行有「大細 P」之分。', 
+    en_desc: 'The benchmark lending rate set by individual banks, affecting savings rates too.', 
+    zh_ex: '當銀行上調 P-Rate 時，通常代表低息環境結束。', 
+    en_ex: 'A Prime Rate hike usually signals the end of low-interest eras.' 
+  },
+  { 
+    id: 'new_fund_reset', 
+    term_zh: '資金冷卻期', 
+    term_en: 'Cooling-off Period', 
+    zh_desc: '資金離開銀行後須存放於他行一段時間，才可再次定義為「新資金」。', 
+    en_desc: 'The time funds must stay outside a bank to be considered "New Funds" again.', 
+    zh_ex: '通常為 7 至 14 天。預先規劃冷卻期可最大化利息收入。', 
+    en_ex: 'Properly planning this reset maximizes your yield.' 
+  },
+  { 
+    id: 'tenor', 
+    term_zh: '存款期 (Tenor)', 
+    term_en: 'Tenor', 
+    zh_desc: '定存合約的期限。銀行通常提供 1M, 3M, 6M, 12M 等標準期限。', 
+    en_desc: 'The time duration of a deposit contract (e.g., 3-month or 12-month).', 
+    zh_ex: '長存期通常提供較高息率，但會犧牲資金流動性。', 
+    en_ex: 'Longer tenors usually offer higher yields but lock your cash.' 
+  },
+  { 
+    id: 'effective_rate', 
+    term_zh: '有效利率', 
+    term_en: 'Effective Interest Rate', 
+    zh_desc: '扣除行政費、換匯成本及考慮複利後的真實利息。建議使用 HKMA 計算器。', 
+    en_desc: 'The true yield after fees, FX costs, and compounding. Check HKMA calculators.', 
+    zh_ex: '10% 迎新息如果上限只有 1 萬港元，有效利率其實不高。', 
+    en_ex: 'High promo rates on small caps result in low effective returns.' 
+  },
+  { 
+    id: 'early_withdrawal', 
+    term_zh: '提早提取罰息', 
+    term_en: 'Early Withdrawal Penalty', 
+    zh_desc: '未到期提取存款的處罰，通常包括沒收利息及扣除行政費。受銀行服務細則約束。', 
+    en_desc: 'Penalties for breaking a deposit before maturity, often forfeiting all interest.', 
+    zh_ex: '斷單可能導致拿回的金額少於本金，務必保留備用金。', 
+    en_ex: 'Breaking an FD early can result in a loss of principal.' 
+  },
+  { 
+    id: 'trb', 
+    term_zh: '綜合總餘額 (TRB)', 
+    term_en: 'Total Relationship Balance', 
+    zh_desc: '你在銀行的總資產價值，包括存款、基金及保險，決定你的戶口等級。', 
+    en_desc: 'The total value of assets held with a bank, determining your membership tier.', 
+    zh_ex: '達標 TRB 可獲豁免月費並享受 VIP 專屬高息。', 
+    en_ex: 'Meeting TRB levels unlocks VIP rates and waives fees.' 
+  },
+  { 
+    id: 'fps', 
+    term_zh: '轉數快 (FPS)', 
+    term_en: 'Faster Payment System', 
+    zh_desc: '香港即時小額轉賬系統，支援 24/7 跨行轉賬。詳見 HKMA 轉數快介紹。', 
+    en_desc: 'HK\'s 24/7 instant transfer system for smaller amounts. See HKMA FPS site.', 
+    zh_ex: '每日轉賬上限通常為 1 萬至 100 萬，視乎個人設定。', 
+    en_ex: 'Daily limits vary between 10k to 1M depending on settings.' 
+  },
+  { 
+    id: 'stale_rate', 
+    term_zh: '牌照利率 (Board Rate)', 
+    term_en: 'Board Rate', 
+    zh_desc: '銀行基礎掛牌利率，通常極低。定存到期後若無指令，通常按此率續期。', 
+    en_desc: 'Default base rate without promotions. Applies to auto-renewals on maturity.', 
+    zh_ex: '牌照息通常僅為 0.1%，務必手動設置到期指示。', 
+    en_ex: 'Board rates are often as low as 0.1%; avoid auto-rollovers.' 
+  }
 ];
 
 const T = {
@@ -341,17 +510,127 @@ export default function App() {
   ];
 
   const strategiesContent = [
-    { id: 'hopper', icon: CalendarPlus, key: 'hopper', label: lang === 'zh_TW' ? '搬錢行事曆' : 'Cooling-off Calendar', color: 'bg-sky-500', title: lang === 'zh_TW' ? '搬錢行事曆' : 'Cooling-off Calendar', scenario: lang === 'zh_TW' ? '「我有 100 萬放在 A 銀行很久了，到期後只能收 0.1% 的舊資金利率。」' : 'My $1M is stuck in Bank A. Renewal rate is only 0.1%.', points: lang === 'zh_TW' ? ['新資金重置', '無縫銜接高息', '三行循環法'] : ['Reset Status', 'Seamless Flow', '3-Bank Rotation'], desc: lang === 'zh_TW' ? '透過有序地移動資金，確保每一筆定存都符合銀行的「新資金」定義，以獲取較高的優惠利率。' : 'Move funds in a planned sequence to reset new-funds status and capture better promotional rates.', full: lang === 'zh_TW' ? '絕大部分銀行的高息定存只適用於「新資金」。如果到期後直接在原銀行續存，利率通常會回落至牌價息。較有效的做法是建立一個搬錢時間表：在定存到期前兩天先準備另一家銀行戶口，到期當日立即透過轉數快或轉賬把本息轉走。由於不少銀行以 7 至 14 天作為參考窗口，只要資金離開一段時間後再流入，便有機會重新被視為新資金。若同時維持兩至三家主要銀行戶口，便可形成循環，提高整體定存回報。' : 'Most high-yield time deposit offers are limited to new funds. If you simply renew at the same bank on maturity, the rate usually falls back to the board rate. A more effective approach is to create a transfer calendar: prepare another bank account two days before maturity, then move the principal and interest out immediately on the maturity date through FPS or bank transfer. Since many banks apply a 7- to 14-day reference window, funds that leave and return later may qualify again as new funds. With two or three core bank accounts in rotation, savers can repeatedly access stronger promotional rates.' },
-    { id: 'arbitrage', icon: Zap, key: 'arbitrage', label: lang === 'zh_TW' ? '利差套利術' : 'Rate Arbitrage', color: 'bg-yellow-500', title: lang === 'zh_TW' ? '利差套利術' : 'Rate Arbitrage', scenario: lang === 'zh_TW' ? '「借錢去存錢？這聽起來很冒險。」但當貸款 APR 低於定存年利率時，淨利潤是穩賺的。' : 'Borrowing to save sounds risky. But if Loan APR < FD Rate, the spread is pure profit.', points: lang === 'zh_TW' ? ['低息稅貸獲取', '高息定存套利', '現金流精確對沖'] : ['Cheap Tax Loans', 'Lump Sum Arbitrage', 'Cashflow Hedging'], desc: lang === 'zh_TW' ? '利用銀行提供的極低息貸款獲取本金，投入高於貸款成本的定存單獲取純回報。' : 'Use low-interest personal or tax loans to fund high-yield FDs and earn the spread.', full: lang === 'zh_TW' ? '這在每年的稅貸季節最為常見。若銀行提供低息貸款，而市場定存利率更高，兩者之間便形成可計算的利差收益。關鍵不在於單看利差，而在於管理每月還款壓力。由於貸款通常按月攤還，而定存多數到期才派息，若現金流安排不當，便可能出現流動性壓力。因此較穩妥的做法，是以穩定收入支付每月供款，或選擇按月派息產品來對沖資金流出。' : 'This is most common during tax-loan season. If a bank offers a low APR loan while market deposit rates are higher, the spread becomes a calculable gain. The real issue is not the spread itself, but cashflow management. Loans are usually repaid monthly, while many deposits pay only at maturity. If liquidity is not planned well, the strategy can create repayment pressure. A safer structure is to use stable monthly income for installments, or to choose products with monthly interest payouts to offset the outflow.' },
-    { id: 'sprint', icon: Target, key: 'sprint', label: lang === 'zh_TW' ? '季結衝刺策略' : 'Quarter-End Sprint', color: 'bg-red-500', title: lang === 'zh_TW' ? '季結衝刺策略' : 'Quarter-End Sprint', scenario: lang === 'zh_TW' ? '「為什麼 6 月 28 號的利率突然比 6 月 1 號高出 1 厘？」' : 'Why did the rate jump by 1% in late June?', points: lang === 'zh_TW' ? ['美化資產負債表', '半年結/年結快閃', '短年期極高息'] : ['Window Dressing', 'Quarterly Peaks', 'Flash Promo Timing'], desc: lang === 'zh_TW' ? '銀行在每季末為了美化存款額度，往往推出只維持數天的快閃加息。' : 'Banks often raise rates sharply at quarter-end to improve their reported deposit base.', full: lang === 'zh_TW' ? '這種現象常見於季度末、半年結或年結前後。銀行為了在結算時點前吸納更多存款，可能在最後一週推出限時高息優惠。這些優惠通常時間短、名額有限，有時更只限指定渠道或分行。對存戶而言，重點不是天天觀察，而是在關鍵月份的最後一週提高敏感度，並預先保留可隨時調動的資金。這是一種對時點要求很高的策略，執行速度往往比預測更重要。' : 'This often happens around quarter-end, half-year-end, or year-end. Banks may launch short-lived promotional rates in the final week to attract more deposits before reporting dates. These offers are usually brief, limited in quota, and sometimes restricted to certain channels or branches. For savers, the objective is not constant monitoring, but heightened attention during the final week of key months while keeping part of the portfolio liquid and ready to move. It is a timing strategy in which execution speed often matters more than forecasting.' },
-    { id: 'tasks', icon: Gift, key: 'tasks', label: lang === 'zh_TW' ? '任務加息最大化' : 'Quest Mastery', color: 'bg-purple-500', title: lang === 'zh_TW' ? '任務加息最大化' : 'Quest Mastery', scenario: lang === 'zh_TW' ? '「虛擬銀行的基礎息只有 1 厘，但廣告說最高有 6 厘？」' : 'VB base rate is 1%, but ads claim 6%. What is the catch?', points: lang === 'zh_TW' ? ['消費任務觸發', '多重加息券並用', '存額上限分析'] : ['Spending Triggers', 'Coupon Stacking', 'Cap Analysis'], desc: lang === 'zh_TW' ? '虛擬銀行經常透過任務和加息券設計高息機制，善用規則組合可明顯提升實際回報。' : 'Virtual banks often use tasks and coupons to build promotional yields, and careful sequencing can improve realized returns.', full: lang === 'zh_TW' ? '虛擬銀行的最高利率通常並非單一固定利率，而是由基礎利率、任務回贈和優惠券疊加而成。要拿到最高回報，關鍵是先完成指定任務，例如簽賬、設定自動轉賬或維持結餘，再在優惠條件正式生效後存入資金。真正需要計算的是適用金額上限與有效期限，而不是只看宣傳中的最高年利率。這類產品通常較適合中小額資金，因為高息部分往往只適用於首幾萬或十幾萬港元。' : 'The headline yield offered by virtual banks is usually not a single rate, but a combination of base interest, task-based bonuses, and promotional coupons. To maximize return, the saver should complete the required actions first, such as spending, setting up autopay, or maintaining balances, and only then place funds after the boosted conditions become active. What must be calculated is the eligible balance cap and the duration of the bonus, rather than focusing only on the advertised top rate. These products are usually more suitable for small and medium balances because the highest yield often applies only to the first portion of deposits.' },
-    { id: 'pooling', icon: Users, key: 'pooling', label: lang === 'zh_TW' ? '家族資金池' : 'Yield Pooling', color: 'bg-indigo-500', title: lang === 'zh_TW' ? '家族資金池' : 'Yield Pooling', scenario: lang === 'zh_TW' ? '「我只有 10 萬，但我想享有 100 萬卓越理財戶口才有的 5 厘高息。」' : 'I have $100k, but I want the 5% rate reserved for $1M Premier tiers.', points: lang === 'zh_TW' ? ['AUM 共享效應', '聯名戶口優勢', '資產動態騰挪'] : ['Shared TRB', 'Joint Account Power', 'Wealth Shifting'], desc: lang === 'zh_TW' ? '集合家族成員資金達到高端理財門檻，讓更多成員共享高層級客戶優惠。' : 'Pool family assets to reach premium banking thresholds and share relationship-tier benefits.', full: lang === 'zh_TW' ? '不少傳統銀行容許聯名戶口或家庭關係下的資產共同計算，從而達到較高的總資產門檻。這代表即使個別成員名下資金不多，只要家庭整體資產達標，仍可能享有 Premier 或 Prestige 等高端客戶待遇，進一步開立較高息的定存產品。這種做法反映出，定存策略不只是個人決策，也可以是家庭資源配置的一部分。' : 'Many traditional banks allow assets in joint accounts or family-linked relationships to be counted together toward premium thresholds. This means that even if one individual holds only a modest balance, the household may still qualify for Premier or Prestige status if the combined assets are large enough. That status can then unlock better deposit offers. The broader lesson is that deposit strategy is not always an individual decision; it can also be structured at the household level.' },
-    { id: 'reinvest', icon: Repeat, key: 'reinvest', label: lang === 'zh_TW' ? '真複利循環' : 'Compound Loop', color: 'bg-green-500', title: lang === 'zh_TW' ? '真複利循環' : 'Compound Loop', scenario: lang === 'zh_TW' ? '「利息放在活期戶口慢慢滾就好啦。」這其實會讓你損失複利帶來的額外回報。' : 'Leaving interest in savings is fine. No, you are giving up compounding gains.', points: lang === 'zh_TW' ? ['每月派息選項', 'MMF 滾存利滾利', '提升 APY 收益'] : ['Monthly Payouts', 'MMF Sweep', 'APY Optimization'], desc: lang === 'zh_TW' ? '將定存派發的利息及早再投入其他可生息工具，可逐步提高實際年化回報。' : 'Reinvest interest as early as possible into another yield-bearing instrument to lift effective annual return.', full: lang === 'zh_TW' ? '若定存產品容許按月派息，而不是等到期一次過收取，便可更早取得現金流。這些利息若只停留在低息活期戶口，複利效果非常有限；若即時轉入貨幣市場基金或其他短期生息工具，便能讓利息繼續產生利息。單次金額可能不大，但在較長時間和較大本金下，這種再投資會明顯提高實際 APY。這也是理解複利最具體的方法之一。' : 'If a deposit allows monthly interest payouts rather than a single payment at maturity, the saver gains earlier access to cashflow. If that interest simply sits in a low-yield savings account, the compounding effect is minimal. But if it is promptly swept into a money market fund or another short-term yield product, the interest itself begins to earn return. Each monthly amount may seem small, but over time and on larger principals, this reinvestment can materially increase effective APY. It is one of the clearest practical illustrations of compounding.' },
-    { id: 'cd_play', icon: Layers, key: 'cd_play', label: lang === 'zh_TW' ? '存款證戰術' : 'CD Strategy', color: 'bg-cyan-500', title: lang === 'zh_TW' ? '存款證戰術' : 'CD Strategy', scenario: lang === 'zh_TW' ? '「存兩年定存？中途要用錢斷單會罰好重本金架。」' : 'Locked for 2 years? Penalties for early break will hurt your principal.', points: lang === 'zh_TW' ? ['二級市場流動性', '鎖定降息溢價', '靈活轉讓機制'] : ['Secondary Liquidity', 'Locking Premiums', 'Transferability'], desc: lang === 'zh_TW' ? '利用可轉讓存款證的市場流動性，在利率下行時捕捉價格溢價。' : 'Use negotiable CDs to capture price premiums when market rates fall.', full: lang === 'zh_TW' ? '傳統定存通常只能持有到期，若提前終止往往要承受罰息甚至損失部分收益。但可轉讓存款證不同，它本身具有市場交易屬性。若你在高利率時鎖定較長期的高息 CD，而之後市場利率下降，該 CD 的票息便相對吸引，可能在二級市場產生溢價。如此一來，投資者便不必死守到期，也可透過轉讓提早實現部分未來收益。' : 'Traditional fixed deposits are usually held to maturity, and early breakage often leads to penalties or lost interest. Negotiable certificates of deposit are different because they can have secondary-market value. If an investor locks in a relatively high long-term yield and market rates later fall, that CD becomes more attractive than newly issued instruments and may trade at a premium. As a result, the holder may realize future value earlier through sale rather than being forced to wait until maturity.' },
-    { id: 'carry', icon: Globe, key: 'carry', label: lang === 'zh_TW' ? '聯繫匯率套利' : 'FX Carry Trade', color: 'bg-amber-500', title: lang === 'zh_TW' ? '聯繫匯率套利' : 'FX Carry Trade', scenario: lang === 'zh_TW' ? '「存美金太複雜，還要手續費。」' : 'USD savings are too complex and bank fees are too high.', points: lang === 'zh_TW' ? ['港美利差監控', '券商低成本換匯', '風險調整回報'] : ['Interest Differential', 'Low-cost FX', 'Risk-adjusted Return'], desc: lang === 'zh_TW' ? '當美金利率顯著高於港元時，可透過低成本換匯路徑提高存款收益，但仍須考慮匯率與交易成本。' : 'When USD rates are much higher than HKD rates, low-cost conversion routes may improve yield, subject to FX and transaction costs.', full: lang === 'zh_TW' ? '這個策略的核心不是單看美元利率較高，而是比較利差、換匯點差與匯率風險後的淨結果。若直接透過零售銀行換匯，買賣價差可能已侵蝕大部分收益，因此不少人會改用成本較低的券商渠道處理兌換，再把資金轉回銀行存款。雖然聯繫匯率制度令港元兌美元波動相對有限，但這不代表完全沒有風險。真正值得關注的是，扣除成本與風險後，額外利差是否仍然足以支持操作。' : 'The key is not simply that USD rates may be higher, but whether the extra yield remains attractive after conversion spreads and exchange-rate risk are considered. If funds are converted through retail banks, the bid-ask spread may already consume much of the gain, which is why some savers prefer lower-cost broker routes before placing deposits back with a bank. Although the HKD-USD peg reduces exchange-rate volatility, it does not eliminate all risk. The relevant question is whether the net spread remains worthwhile after costs and uncertainty are taken into account.' },
-    { id: 'ladder_pro', icon: TrendingUp, key: 'ladder_pro', label: lang === 'zh_TW' ? '流動性階梯模型' : 'Liquidity Ladder', color: 'bg-emerald-500', title: lang === 'zh_TW' ? '流動性階梯模型' : 'Liquidity Ladder', scenario: lang === 'zh_TW' ? '「我有閒錢，應該全部存入最高息的一年期？」不，這會讓你失去應對市場波動的能力。' : 'Should I put everything in the highest 1-year rate? No, you lose agility.', points: lang === 'zh_TW' ? ['5-15-30-50 配置', '動態資產分配', '收益流動平衡'] : ['5-15-30-50 Model', 'Dynamic Allocation', 'Balance Management'], desc: lang === 'zh_TW' ? '透過分段到期與多層配置，同時兼顧收益、流動性與再投資彈性。' : 'Use staggered maturities and layered allocation to balance yield, liquidity, and reinvestment flexibility.', full: lang === 'zh_TW' ? '把所有資金一次過鎖在最長存期，雖然可能拿到當下最高利率，但也會失去面對市場變化的彈性。較穩健的做法是把資金分成不同部分，例如保留一部分現金和貨幣基金作流動性，再把其餘資金配置到短、中、長期定存。這樣一來，市場一旦出現更吸引的利率，總會有部分資金在短期內到期可供重新部署。階梯模型的價值不在追求單點最高回報，而在於把收益與靈活性一併納入管理。' : 'Locking all funds into the longest tenor may maximize today’s quoted rate, but it also removes flexibility when market conditions change. A more robust approach is to divide capital into several layers, keeping some in cash or money market funds for liquidity while placing the rest across short-, medium-, and long-term deposits. This ensures that some funds mature regularly and can be redeployed when more attractive opportunities appear. The value of the ladder is not chasing a single peak rate, but managing return and flexibility together.' },
-    { id: 'sop', icon: Clock, key: 'sop', label: lang === 'zh_TW' ? '防呆 SOP 清單' : 'Maturity SOP', color: 'bg-slate-500', title: lang === 'zh_TW' ? '防呆 SOP 清單' : 'Maturity SOP', scenario: lang === 'zh_TW' ? '「到期當天我才去想錢要搬去哪。」這往往會讓你損失幾天的利息。' : 'I will figure it out on maturity day. Wrong, you have already lost interest.', points: lang === 'zh_TW' ? ['預先開立戶口', 'FPS 限額檢查', '日曆精確管理'] : ['Pre-opening Accounts', 'Limit Checks', 'Precision Scheduling'], desc: lang === 'zh_TW' ? '建立標準流程可減少資金空窗期與操作失誤，讓到期日成為高效轉換日。' : 'A standard process reduces idle days and operational mistakes, turning maturity day into an efficient rollover event.', full: lang === 'zh_TW' ? '許多定存回報流失並不是因為選錯銀行，而是因為執行過程出現失誤，例如忘記取消自動續期、未檢查 FPS 限額、或到期當天才開始尋找下一個去向。建立一套簡單而固定的 SOP，可以把整個流程前移，例如提早幾天確認目標銀行、檢查轉賬設定、安排提醒，並在到期日即時完成轉賬與新存單開立。這樣做的效果，是盡量縮短甚至消除零息空窗期。' : 'A large share of lost deposit return comes not from choosing the wrong bank, but from execution mistakes, such as forgetting to disable auto-renewal, failing to check FPS transfer limits, or only deciding on the next placement on maturity day. A simple and repeatable SOP shifts the work forward: confirm the destination bank a few days early, verify transfer settings, set reminders, and complete the rollover promptly on the maturity date. The result is a shorter, or even eliminated, zero-interest gap.' }
-  ];
+    { 
+        id: 'hopper', 
+        icon: CalendarPlus, 
+        key: 'hopper', 
+        label: lang === 'zh_TW' ? '搬錢行事曆' : 'Cooling-off Calendar', 
+        color: 'bg-sky-500', 
+        title: lang === 'zh_TW' ? '搬錢行事曆' : 'Cooling-off Calendar', 
+        scenario: lang === 'zh_TW' ? '「我有 100 萬放在 A 銀行很久了，續期竟然只有 0.1%，點樣可以變返做『新資金』？」' : '“My $1M has been in Bank A for ages. The renewal is only 0.1%. How do I qualify for the high ‘New Fund’ rates again?”', 
+        points: lang === 'zh_TW' ? ['新資金重置', '無縫銜接高息', '三行循環法'] : ['Reset Status', 'Seamless Flow', '3-Bank Rotation'], 
+        desc: lang === 'zh_TW' ? '透過有序地移動資金，確保每一筆定存都符合銀行的「新資金」定義，以獲取較高的優惠利率。' : 'Move funds in a planned sequence to reset new-funds status and capture better promotional rates.', 
+        full: lang === 'zh_TW' ? '絕大部分銀行的高息定存只適用於「新資金」。如果到期後直接在原銀行續存，利率通常會回落至牌價息。較有效的做法是建立一個搬錢時間表：在定存到期前兩天先準備另一家銀行戶口，到期當日立即透過轉數快或轉賬把本息轉走。由於不少銀行以 7 至 14 天作為參考窗口，只要資金離開一段時間後再流入，便有機會重新被視為新資金。若同時維持兩至三家主要銀行戶口，便可形成循環，提高整體定存回報。' : 'Most high-yield time deposit offers are limited to new funds. If you simply renew at the same bank on maturity, the rate usually falls back to the board rate. A more effective approach is to create a transfer calendar: prepare another bank account two days before maturity, then move the principal and interest out immediately on the maturity date through FPS or bank transfer. Since many banks apply a 7- to 14-day reference window, funds that leave and return later may qualify again as new funds. With two or three core bank accounts in rotation, savers can repeatedly access stronger promotional rates.' 
+    },
+    { 
+        id: 'arbitrage', 
+        icon: Zap, 
+        key: 'arbitrage', 
+        label: lang === 'zh_TW' ? '利差套利術' : 'Rate Arbitrage', 
+        color: 'bg-yellow-500', 
+        title: lang === 'zh_TW' ? '利差套利術' : 'Rate Arbitrage', 
+        scenario: lang === 'zh_TW' ? '「銀行稅貸息率 1.8%，而定存息有 4%，即係可以『借錢生息』？」' : '“The tax loan rate is 1.8%, but deposits are paying 4%. Can I literally make money using the bank’s own cash?”', 
+        points: lang === 'zh_TW' ? ['低息稅貸獲取', '高息定存套利', '現金流精確對沖'] : ['Cheap Tax Loans', 'Lump Sum Arbitrage', 'Cashflow Hedging'], 
+        desc: lang === 'zh_TW' ? '利用銀行提供的極低息貸款獲取本金，投入高於貸款成本的定存單獲取純回報。' : 'Use low-interest personal or tax loans to fund high-yield FDs and earn the spread.', 
+        full: lang === 'zh_TW' ? '這在每年的稅貸季節最為常見。若銀行提供低息貸款，而市場定存利率更高，兩者之間便形成可計算的利差收益。關鍵不在於單看利差，而在於管理每月還款壓力。由於貸款通常按月攤還，而定存多數到期才派息，若現金流安排不當，便可能出現流動性壓力。因此較穩妥的做法，是以穩定收入支付每月供款，或選擇按月派息產品來對沖資金流出。' : 'This is most common during tax-loan season. If a bank offers a low APR loan while market deposit rates are higher, the spread becomes a calculable gain. The real issue is not the spread itself, but cashflow management. Loans are usually repaid monthly, while many deposits pay only at maturity. If liquidity is not planned well, the strategy can create repayment pressure. A safer structure is to use stable monthly income for installments, or to choose products with monthly interest payouts to offset the outflow.' 
+    },
+    { 
+        id: 'sprint', 
+        icon: Target, 
+        key: 'sprint', 
+        label: lang === 'zh_TW' ? '季結衝刺策略' : 'Quarter-End Sprint', 
+        color: 'bg-red-500', 
+        title: lang === 'zh_TW' ? '季結衝刺策略' : 'Quarter-End Sprint', 
+        scenario: lang === 'zh_TW' ? '「點解去到 6 月同 12 月底，銀行啲定存息會突然跳升 1 厘嘅？」' : '“Why do deposit rates suddenly spike by 1% in late June and late December every year?”', 
+        points: lang === 'zh_TW' ? ['美化資產負債表', '半年結/年結快閃', '短年期極高息'] : ['Window Dressing', 'Quarterly Peaks', 'Flash Promo Timing'], 
+        desc: lang === 'zh_TW' ? '銀行在每季末為了美化存款額度，往往推出只維持數天的快閃加息。' : 'Banks often raise rates sharply at quarter-end to improve their reported deposit base.', 
+        full: lang === 'zh_TW' ? '這種現象常見於季度末、半年結或年結前後。銀行為了在結算時點前吸納更多存款，可能在最後一週推出限時高息優惠。這些優惠通常時間短、名額有限，有時更只限指定渠道或分行。對存戶而言，重點不是天天觀察，而是在關鍵月份的最後一週提高敏感度，並預先保留可隨時調動的資金。這是一種對時點要求很高的策略，執行速度往往比預測更重要。' : 'This often happens around quarter-end, half-year-end, or year-end. Banks may launch short-lived promotional rates in the final week to attract more deposits before reporting dates. These offers are usually brief, limited in quota, and sometimes restricted to certain channels or branches. For savers, the objective is not constant monitoring, but heightened attention during the final week of key months while keeping part of the portfolio liquid and ready to move. It is a timing strategy in which execution speed often matters more than forecasting.' 
+    },
+    { 
+        id: 'tasks', 
+        icon: Gift, 
+        key: 'tasks', 
+        label: lang === 'zh_TW' ? '任務加息最大化' : 'Quest Mastery', 
+        color: 'bg-purple-500', 
+        title: lang === 'zh_TW' ? '任務加息最大化' : 'Quest Mastery', 
+        scenario: lang === 'zh_TW' ? '「虛擬銀行基礎息得 1%，點樣可以疊加『加息券』玩到廣告寫嘅 6%？」' : '“The base rate is only 1%. How do I stack ‘interest coupons’ to actually get that 6% advertised?”', 
+        points: lang === 'zh_TW' ? ['消費任務觸發', '多重加息券並用', '存額上限分析'] : ['Spending Triggers', 'Coupon Stacking', 'Cap Analysis'], 
+        desc: lang === 'zh_TW' ? '虛擬銀行經常透過任務和加息券設計高息機制，善用規則組合可明顯提升實際回報。' : 'Virtual banks often use tasks and coupons to build promotional yields, and careful sequencing can improve realized returns.', 
+        full: lang === 'zh_TW' ? '虛擬銀行的最高利率通常並非單一固定利率，而是由基礎利率、任務回贈和優惠券疊加而成。要拿到最高回報，關鍵是先完成指定任務，例如簽賬、設定自動轉賬或維持結餘，再在優惠條件正式生效後存入資金。真正需要計算的是適用金額上限與有效期限，而不是只看宣傳中的最高年利率。這類產品通常較適合中小額資金，因為高息部分往往只適用於首幾萬或十幾萬港元。' : 'The headline yield offered by virtual banks is usually not a single rate, but a combination of base interest, task-based bonuses, and promotional coupons. To maximize return, the saver should complete the required actions first, such as spending, setting up autopay, or maintaining balances, and only then place funds after the boosted conditions become active. What must be calculated is the eligible balance cap and the duration of the bonus, rather than focusing only on the advertised top rate. These products are usually more suitable for small and medium balances because the highest yield often applies only to the first portion of deposits.' 
+    },
+    { 
+        id: 'pooling', 
+        icon: Users, 
+        key: 'pooling', 
+        label: lang === 'zh_TW' ? '家族資金池' : 'Yield Pooling', 
+        color: 'bg-indigo-500', 
+        title: lang === 'zh_TW' ? '家族資金池' : 'Yield Pooling', 
+        scenario: lang === 'zh_TW' ? '「我得 10 萬，但我想享有 100 萬理財戶口先有嘅特高利率，有冇辦法？」' : '“I only have $100k, but I want the premium rates reserved for $1M account holders. Is there a way?”', 
+        points: lang === 'zh_TW' ? ['AUM 共享效應', '聯名戶口優勢', '資產動態騰挪'] : ['Shared TRB', 'Joint Account Power', 'Wealth Shifting'], 
+        desc: lang === 'zh_TW' ? '集合家族成員資金達到高端理財門檻，讓更多成員共享高層級客戶優惠。' : 'Pool family assets to reach premium banking thresholds and share relationship-tier benefits.', 
+        full: lang === 'zh_TW' ? '不少傳統銀行容許聯名戶口或家庭關係下的資產共同計算，從而達到較高的總資產門檻。這代表即使個別成員名下資金不多，只要家庭整體資產達標，仍可能享有 Premier 或 Prestige 等高端客戶待遇，進一步開立較高息的定存產品。這種做法反映出，定存策略不只是個人決策，也可以是家庭資源配置的一部分。' : 'Many traditional banks allow assets in joint accounts or family-linked relationships to be counted together toward premium thresholds. This means that even if one individual holds only a modest balance, the household may still qualify for Premier or Prestige status if the combined assets are large enough. That status can then unlock better deposit offers. The broader lesson is that deposit strategy is not always an individual decision; it can also be structured at the household level.' 
+    },
+    { 
+        id: 'reinvest', 
+        icon: Repeat, 
+        key: 'reinvest', 
+        label: lang === 'zh_TW' ? '真複利循環' : 'Compound Loop', 
+        color: 'bg-green-500', 
+        title: lang === 'zh_TW' ? '真複利循環' : 'Compound Loop', 
+        scenario: lang === 'zh_TW' ? '「點解我每個月收咗利息唔應該放喺儲蓄戶口，而係要『利滾利』？」' : '“Why should I immediately move my monthly interest out of savings to earn ‘interest on interest’?”', 
+        points: lang === 'zh_TW' ? ['每月派息選項', 'MMF 滾存利滾利', '提升 APY 收益'] : ['Monthly Payouts', 'MMF Sweep', 'APY Optimization'], 
+        desc: lang === 'zh_TW' ? '將定存派發的利息及早再投入其他可生息工具，可逐步提高實際年化回報。' : 'Reinvest interest as early as possible into another yield-bearing instrument to lift effective annual return.', 
+        full: lang === 'zh_TW' ? '若定存產品容許按月派息，而不是等到期一次過收取，便可更早取得現金流。這些利息若只停留在低息活期戶口，複利效果非常有限；若即時轉入貨幣市場基金或其他短期生息工具，便能讓利息繼續產生利息。單次金額可能不大，但在較長時間 and 較大本金下，這種再投資會明顯提高實際 APY。這也是理解複利最具體的方法之一。' : 'If a deposit allows monthly interest payouts rather than a single payment at maturity, the saver gains earlier access to cashflow. If that interest simply sits in a low-yield savings account, the compounding effect is minimal. But if it is promptly swept into a money market fund or another short-term yield product, the interest itself begins to earn return. Each monthly amount may seem small, but over time and on larger principals, this reinvestment can materially increase effective APY. It is one of the clearest practical illustrations of compounding.' 
+    },
+    { 
+        id: 'cd_play', 
+        icon: Layers, 
+        key: 'cd_play', 
+        label: lang === 'zh_TW' ? '存款證戰術' : 'CD Strategy', 
+        color: 'bg-cyan-500', 
+        title: lang === 'zh_TW' ? '存款證戰術' : 'CD Strategy', 
+        scenario: lang === 'zh_TW' ? '「想鎖定兩年高息，但驚中間要用錢，存款證 (CD) 可以點樣幫到我？」' : '“I want to lock in rates for 2 years but I’m scared I might need the cash. How do Certificates of Deposit help?”', 
+        points: lang === 'zh_TW' ? ['二級市場流動性', '鎖定降息溢價', '靈活轉讓機制'] : ['Secondary Liquidity', 'Locking Premiums', 'Transferability'], 
+        desc: lang === 'zh_TW' ? '利用可轉讓存款證的市場流動性，在利率下行時捕捉價格溢價。' : 'Use negotiable CDs to capture price premiums when market rates fall.', 
+        full: lang === 'zh_TW' ? '傳統定存通常只能持有到期，若提前終止往往要承受罰息甚至損失部分收益。但可轉讓存款證不同，它本身具有市場交易屬性。若你在高利率時鎖定較長期的高息 CD，而之後市場利率下降，該 CD 的票息便相對吸引，可能在二級市場產生溢價。如此一來，投資者便不必死守到期，也可透過轉讓提早實現部分未來收益。' : 'Traditional fixed deposits are usually held to maturity, and early breakage often leads to penalties or lost interest. Negotiable certificates of deposit are different because they can have secondary-market value. If an investor locks in a relatively high long-term yield and market rates later fall, that CD becomes more attractive than newly issued instruments and may trade at a premium. As a result, the holder may realize future value earlier through sale rather than being forced to wait until maturity.' 
+    },
+    { 
+        id: 'carry', 
+        icon: Globe, 
+        key: 'carry', 
+        label: lang === 'zh_TW' ? '聯繫匯率套利' : 'FX Carry Trade', 
+        color: 'bg-amber-500', 
+        title: lang === 'zh_TW' ? '聯繫匯率套利' : 'FX Carry Trade', 
+        scenario: lang === 'zh_TW' ? '「既然港美掛鉤，點樣可以利用美元高息路徑賺取額外 1% 嘅利差？」' : '“Since HKD is pegged to USD, how can I capture that extra 1% yield spread through dollar-path deposits?”', 
+        points: lang === 'zh_TW' ? ['港美利差監控', '券商低成本換匯', '風險調整回報'] : ['Interest Differential', 'Low-cost FX', 'Risk-adjusted Return'], 
+        desc: lang === 'zh_TW' ? '當美金利率顯著高於港元時，可透過低成本換匯路徑提高存款收益，但仍須考慮匯率與交易成本。' : 'When USD rates are much higher than HKD rates, low-cost conversion routes may improve yield, subject to FX and transaction costs.', 
+        full: lang === 'zh_TW' ? '這個策略的核心不是單看美元利率較高，而是比較利差、換匯點差與匯率風險後的淨結果。若直接透過零售銀行換匯，買賣價差可能已侵蝕大部分收益，因此不少人會改用成本較低的券商渠道處理兌換，再把資金轉回銀行存款。雖然聯繫匯率制度令港元兌美元波動相對有限，但這不代表完全沒有風險。真正值得關注的是，扣除成本與風險後，額外利差是否仍然足以支持操作。' : 'The key is not simply that USD rates may be higher, but whether the extra yield remains attractive after conversion spreads and exchange-rate risk are considered. If funds are converted through retail banks, the bid-ask spread may already consume much of the gain, which is why some savers prefer lower-cost broker routes before placing deposits back with a bank. Although the HKD-USD peg reduces exchange-rate volatility, it does not eliminate all risk. The relevant question is whether the net spread remains worthwhile after costs and uncertainty are taken into account.' 
+    },
+    { 
+        id: 'ladder_pro', 
+        icon: TrendingUp, 
+        key: 'ladder_pro', 
+        label: lang === 'zh_TW' ? '流動性階梯模型' : 'Liquidity Ladder', 
+        color: 'bg-emerald-500', 
+        title: lang === 'zh_TW' ? '流動性階梯模型' : 'Liquidity Ladder', 
+        scenario: lang === 'zh_TW' ? '「我有 200 萬，應該全部存入最高息嘅一年期，定係分開四份等錢隨時用得？」' : '“I have $2M. Should I put it all in a 1-year term for max yield, or split it into 4 parts for constant cash access?”', 
+        points: lang === 'zh_TW' ? ['5-15-30-50 配置', '動態資產分配', '收益流動平衡'] : ['5-15-30-50 Model', 'Dynamic Allocation', 'Balance Management'], 
+        desc: lang === 'zh_TW' ? '透過分段到期與多層配置，同時兼顧收益、流動性與再投資彈性。' : 'Use staggered maturities and layered allocation to balance yield, liquidity, and reinvestment flexibility.', 
+        full: lang === 'zh_TW' ? '把所有資金一次過鎖在最長存期，雖然可能拿到當下最高利率，但也會失去面對市場變化的彈性。較穩健的做法是把資金分成不同部分，例如保留一部分現金和貨幣基金作流動性，再把其餘資金配置到短、中、長期定存。這樣一來，市場一旦出現更吸引的利率，總會有部分資金在短期內到期可供重新部署。階梯模型的價值不在追求單點最高回報，而在於把收益與靈活性一併納入管理。' : 'Locking all funds into the longest tenor may maximize today’s quoted rate, but it also removes flexibility when market conditions change. A more robust approach is to divide capital into several layers, keeping some in cash or money market funds for liquidity while placing the rest across short-, medium-, and long-term deposits. This ensures that some funds mature regularly and can be redeployed when more attractive opportunities appear. The value of the ladder is not chasing a single peak rate, but managing return and flexibility together.' 
+    },
+    { 
+        id: 'sop', 
+        icon: Clock, 
+        key: 'sop', 
+        label: lang === 'zh_TW' ? '防呆 SOP 清單' : 'Maturity SOP', 
+        color: 'bg-slate-500', 
+        title: lang === 'zh_TW' ? '防呆 SOP 清單' : 'Maturity SOP', 
+        scenario: lang === 'zh_TW' ? '「定存聽日到期，我應該點樣做先可以確保一蚊利息空窗期都冇？」' : '“My deposit matures tomorrow. What exactly should I do to ensure zero ‘interest-free’ gaps?”', 
+        points: lang === 'zh_TW' ? ['預先開立戶口', 'FPS 限額檢查', '日曆精確管理'] : ['Pre-opening Accounts', 'Limit Checks', 'Precision Scheduling'], 
+        desc: lang === 'zh_TW' ? '建立標準流程可減少資金空窗期與操作失誤，讓到期日成為高效轉換日。' : 'A standard process reduces idle days and operational mistakes, turning maturity day into an efficient rollover event.', 
+        full: lang === 'zh_TW' ? '許多定存回報流失並不是因為選錯銀行，而是因為執行過程出現失誤，例如忘記取消自動續期、未檢查 FPS 限額、或到期當天才開始尋找下一個去向。建立一套簡單而固定的 SOP，可以把整個流程前移，例如提早幾天確認目標銀行、檢查轉賬設定、安排提醒，並在到期日即時完成轉賬與新存單開立。這樣做的效果，是盡量縮短甚至消除零息空窗期。' : 'A large share of lost deposit return comes not from choosing the wrong bank, but from execution mistakes, such as forgetting to disable auto-renewal, failing to check FPS transfer limits, or only deciding on the next placement on maturity day. A simple and repeatable SOP shifts the work forward: confirm the destination bank a few days early, verify transfer settings, set reminders, and complete the rollover promptly on the maturity date. The result is a shorter, or even eliminated, zero-interest gap.' 
+    }
+];
 
   // --- Views ---
   const dashboardView = (
@@ -512,13 +791,67 @@ export default function App() {
           )}
 
           {currentPage === 'strategies' && (
-            <div className="space-y-8 pb-16 animate-in fade-in">
-              <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-xl"><Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-4xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '賺息大師：專業獲利系統' : 'Yield Master Pro'}</h2><p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">Maximize your cash returns.</p></section>
-              <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6"><div className="flex gap-3 min-w-max">{strategiesContent.map(s => (<button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"> {t.stratLabels[s.key] || s.label}</button>)) }</div></nav>
-              <div className="mt-8">{strategiesContent.map((s, i) => (<InfoCard key={s.id} id={s.id} icon={s.icon} title={lang === 'zh_TW' ? t.stratLabels[s.key] : s.title} points={s.points} description={s.desc} isExpandable={true} fullContent={s.full} t={t} isExpanded={expandedStrategies[s.id]} onToggle={() => setExpandedStrategies(prev => ({...prev, [s.id]: !prev[s.id]}))} bgColor={i % 2 === 0 ? "bg-indigo-600" : "bg-emerald-600"} accentColor={i % 2 === 0 ? "text-indigo-600" : "text-emerald-600"} />))}</div>
-              <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
-            </div>
-          )}
+  <div className="space-y-6 pb-16 animate-in fade-in">
+    {/* Header Section */}
+    <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-xl overflow-hidden">
+      <Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" />
+      <div className="relative z-10">
+        <h2 className="text-3xl font-black mb-2 tracking-tighter">
+          {lang === 'zh_TW' ? '賺息大師：專業獲利系統' : 'Yield Master Pro'}
+        </h2>
+        <p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">
+          Advanced strategies to maximize your cash returns.
+        </p>
+      </div>
+    </section>
+
+    {/* Anchor Navigation */}
+    <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6">
+      <div className="flex gap-3 min-w-max">
+        {strategiesContent.map(s => (
+          <button 
+            key={s.id} 
+            onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })} 
+            className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"
+          > 
+            {t.stratLabels[s.key] || s.label}
+          </button>
+        ))}
+      </div>
+    </nav>
+
+    {/* Content Cards */}
+    <div className="mt-8">
+      {strategiesContent.map((s, i) => (
+        <InfoCard 
+          key={s.id} 
+          id={s.id} 
+          icon={s.icon} 
+          title={s.title} 
+          scenario={s.scenario} 
+          points={s.points} 
+          description={s.desc} 
+          isExpandable={true} 
+          fullContent={s.full} 
+          t={t} 
+          isExpanded={expandedStrategies[s.id]} 
+          onToggle={() => setExpandedStrategies(prev => ({...prev, [s.id]: !prev[s.id]}))} 
+          // Alternating colors between Indigo and Emerald for a "Professional" feel
+          bgColor={i % 2 === 0 ? "bg-indigo-600" : "bg-emerald-600"} 
+          accentColor={i % 2 === 0 ? "text-indigo-600" : "text-emerald-600"} 
+        />
+      ))}
+    </div>
+
+    {/* Call to Action / Back Button */}
+    <button 
+      onClick={() => setCurrentPage('dashboard')} 
+      className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all shadow-lg"
+    >
+      {t.backToDash}
+    </button>
+  </div>
+)}
 
           {currentPage === 'glossary' && (
             <div className="space-y-6 pb-16 animate-in fade-in">
