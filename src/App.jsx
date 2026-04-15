@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   TrendingUp, Search, SortAsc, CalendarDays, Wallet, ShieldCheck,
   ArrowUpRight, AlertCircle, Scale, BookOpen, CheckCircle2, 
@@ -195,6 +195,20 @@ const InfoCard = ({ id, icon: Icon, title, scenario, points, description, bgColo
   </article>
 );
 
+// --- New Ad Placeholder Component ---
+const AdSensePlaceholder = ({ type, className = "" }) => (
+  <div className={`bg-slate-50 border border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center text-slate-400 p-4 overflow-hidden ${className}`}>
+    <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">Advertisement</span>
+    <div className="flex flex-col items-center text-center gap-1">
+      <BadgePercent size={20} className="opacity-30" />
+      <span className="text-[9px] font-bold">Google AdSense Slot</span>
+      <span className="text-[8px] opacity-40">
+        {type === 'sidebar' ? '300 x 600 Skyscraper' : 'Responsive Leaderboard'}
+      </span>
+    </div>
+  </div>
+);
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [lang, setLang] = useState('zh_TW');
@@ -322,7 +336,7 @@ export default function App() {
     { id: 'ladder_101', icon: Layers, label: lang === 'zh_TW' ? '階梯存法' : 'Laddering', color: 'bg-teal-500', title: lang === 'zh_TW' ? '階梯式存法' : 'Laddering Strategy', scenario: lang === 'zh_TW' ? '「我應存一年鎖定高息，定係存三個月等加息好？」' : 'One year for high rates or 3 months for hikes?', points: lang === 'zh_TW' ? ['流動性平衡', '長短息結合', '動態利率追蹤'] : ['Liquidity', 'Term Mixing', 'Tracking'], desc: lang === 'zh_TW' ? '透過時間差，讓你同時享有長期的特高利率，又保留了定期提款的靈活性。' : 'Balancing yield and accessibility.', full: lang === 'zh_TW' ? '將資金拆成四份，分別存入 3, 6, 9, 12 個月。當第一份到期時，再續存 12 個月。最終你會擁有四筆 12 個月單，且每 3 個月就有一筆錢到期。' : 'Stagger maturities to ensure quarterly cash availability.' },
     { id: 'fees_101', icon: Scale, label: lang === 'zh_TW' ? '管理費' : 'Fees', color: 'bg-slate-600', title: lang === 'zh_TW' ? '戶口等級與管理費' : 'Tier Account Fees', scenario: lang === 'zh_TW' ? '升級到「卓越理財」收 5 厘息，定存到期後就把錢搬走。' : 'Upgraded for high rates but forgot the monthly fee.', points: lang === 'zh_TW' ? ['低餘額附加費', '呆帳收費', '隱形成本侵蝕'] : ['Low Balance Fee', 'Dormancy', 'Hidden Costs'], desc: lang === 'zh_TW' ? '高端理財戶口通常有資產門檻。如果定存到期結餘不足，管理費會吃掉利息。' : 'Monthly fees can quickly wipe out interest profit.', full: lang === 'zh_TW' ? '某些帳戶月費高達 400 元。務必確保在提取定存後，該戶口仍能達標或及時降級，否則一年利息可能全交回銀行。' : 'Ensure you meet TRB requirements after withdrawal.' },
     { id: 'mmf_101', icon: Wallet, label: lang === 'zh_TW' ? '貨幣基金' : 'MMF', color: 'bg-rose-500', title: lang === 'zh_TW' ? '貨幣基金 vs 定存' : 'MMF vs FD', scenario: lang === 'zh_TW' ? '「想隨時買股票，但又想啲錢有息收？」' : 'I want liquidity and yield simultaneously.', points: lang === 'zh_TW' ? ['T+0 贖回', '每日計息', '非存保保障'] : ['Fast Redemption', 'Daily Yield', 'No DPS'], desc: lang === 'zh_TW' ? '貨幣市場基金是「隨買隨賣」的現金替代品。流動性極高。' : 'Instant liquidity Cash alternatives.', full: lang === 'zh_TW' ? '雖然利率與 1 個月定存接近，但它不保本且不受 DPS 保護。適合存放 7 天內可能動用的待命資金。' : 'Investment products tracking market rates.' },
-    { id: 'hibor_101', icon: TrendingUp, label: lang === 'zh_TW' ? 'HIBOR' : 'HIBOR', color: 'bg-cyan-600', title: lang === 'zh_TW' ? 'HIBOR 與利息連動' : 'HIBOR Trends', scenario: lang === 'zh_TW' ? '「點解呢個禮拜間間銀行都加定存息？」' : 'Why are all banks raising rates this week?', points: lang === 'zh_TW' ? ['拆息趨勢導向', '季結搶錢月份', '預判手段'] : ['Benchmark Link', 'Quarterly Spikes', 'Prediction'], desc: lang === 'zh_TW' ? 'HIBOR 反映了銀行借錢的批發價。拆息上升，定存息也會隨後上調。' : 'HIBOR measures interbank borrowing costs.', full: lang === 'zh_TW' ? '觀察 1 個月 HIBOR 走勢是預判定存息最好的方法。特別是每年的 6 月和 12 月年結，銀行會大幅調高利率美化報表。' : 'Track HIBOR to time your next placement.' },
+    { id: 'hibor_101', icon: TrendingUp, label: lang === 'zh_TW' ? 'HIBOR' : 'HIBOR', color: 'bg-cyan-600', title: lang === 'zh_TW' ? 'HIBOR 與利息連動' : 'HIBOR Trends', scenario: lang === 'zh_TW' ? '「點解呢個禮拜間間銀行都加定存息？」' : 'Why are all banks raising rates this week?', points: lang === 'zh_TW' ? ['拆息趨勢導向', '季結搶錢月份', '預判手段'] : ['Benchmark Link', 'Quarterly Spikes', 'Prediction'], desc: lang === 'zh_TW' ? 'HIBOR 反映了銀行借錢的批發價。拆息上升，定存息也會隨後上調。' : 'HIBOR measures interbank borrowing costs.', full: lang === 'zh_TW' ? '觀察 1 個月 HIBOR 走勢是預判定存息最好的方法。特別是每年的 6 月 and 12 月年結，銀行會大幅調高利率美化報表。' : 'Track HIBOR to time your next placement.' },
     { id: 'rollover_101', icon: Clock, label: lang === 'zh_TW' ? '續期陷阱' : 'Rollover', color: 'bg-orange-600', title: lang === 'zh_TW' ? '自動續期的陷阱' : 'Rollover Trap', scenario: lang === 'zh_TW' ? '「懶得去整，由得佢自動續存算啦。」' : 'I\'ll just let it auto-renew, too much hassle.', points: lang === 'zh_TW' ? ['默認牌照利率', '手動操作必要', '閒置成本'] : ['Default Rate', 'Manual Renewal', 'Idle Cost'], desc: lang === 'zh_TW' ? '自動續期通常按極低的牌照利率計息。正確做法是到期轉回儲蓄再重新配置。' : 'Auto-renewals revert to baseline rates, 30x lower than promos.', full: lang === 'zh_TW' ? '銀行吸引你的是推廣利率（4.2%），續期則是牌照利率（0.1%）。務必選擇「到期後本息存入儲蓄戶口」。' : 'Always credit back to savings and re-shop.' }
   ];
 
@@ -386,7 +400,7 @@ export default function App() {
           {compareIds.length > 0 && <button onClick={() => setIsCompareOpen(true)} className="bg-blue-600 text-white px-5 py-3 rounded-xl font-black text-[12px] shadow-lg animate-pulse">{t.compareBtn} ({compareIds.length}/3)</button>}
       </div>
 
-      <div className="space-y-1.5 pb-20">
+      <div className="space-y-1.5">
         {displayRows.map((row, idx) => {
           const r = row.currentRate; const belowMin = amount < row.minDeposit; const isSelected = compareIds.includes(row.id);
           const name = lang === 'zh_TW' ? row.name.zh : row.name.en;
@@ -459,88 +473,112 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 pt-6">
-        <div className="lg:hidden flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar font-black text-[10px] uppercase tracking-widest">
-            {Object.keys(t.nav).map(page => (<button key={page} onClick={() => setCurrentPage(page)} className={`whitespace-nowrap px-5 py-2.5 rounded-full border-2 ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}>{t.nav[page]}</button>))}
+      {/* Main Container with Sidebar logic */}
+      <main className="max-w-[1600px] mx-auto px-6 pt-6 flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Content Area (Responsive) */}
+        <div className="flex-1 min-w-0">
+          <div className="lg:hidden flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar font-black text-[10px] uppercase tracking-widest">
+              {Object.keys(t.nav).map(page => (<button key={page} onClick={() => setCurrentPage(page)} className={`whitespace-nowrap px-5 py-2.5 rounded-full border-2 ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}>{t.nav[page]}</button>))}
+          </div>
+
+          {currentPage === 'dashboard' && dashboardView}
+          
+          {currentPage === 'reminder' && (
+            <div className="space-y-6 pb-16 animate-in fade-in">
+              <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-lg"><BellRing className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-3xl font-black mb-2 tracking-tighter">{t.nav.reminder}</h2><p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">{t.seoDesc.reminder}</p></section>
+              <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm space-y-8">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindBankLabel}</label><input list="banks" placeholder={t.remindPlaceholder} value={remindBank} onChange={e => setRemindBank(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /><datalist id="banks">{reminderBankList.map(name => <option key={name} value={name} />)}</datalist></div>
+                  <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindAmtLabel}</label><input type="number" value={remindAmt} onChange={e => setRemindAmt(Number(e.target.value))} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                  <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindRateLabel}</label><input type="number" step="0.01" value={remindRate} onChange={e => setRemindRate(Number(e.target.value))} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                  <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindDateLabel}</label><input type="date" value={remindDate} onChange={e => setRemindDate(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <a href={`https://www.google.com/calendar/render?action=TEMPLATE&text=💰+${t.nav.reminder}：${remindBank || 'Bank'}&details=${t.remindAmtLabel}：HK$${remindAmt.toLocaleString()}%0A${t.remindRateLabel}：${remindRate}%25&dates=${remindDate ? new Date(remindDate).toISOString().replace(/-|:|\\.\\d\\d\\d/g, "") : ""}/${remindDate ? new Date(remindDate).toISOString().replace(/-|:|\\.\\d\\d\\d/g, "") : ""}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white p-5 rounded-3xl font-black text-sm shadow-lg hover:bg-blue-700 transition-all"><CalendarPlus size={20} /> {t.calendarBtn}</a>
+                  <button onClick={() => alert('Push Alert Set')} className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white p-5 rounded-3xl font-black text-sm shadow-lg hover:bg-slate-800 transition-all"><BellRing size={20} /> {t.pushBtn}</button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {currentPage === 'knowledge' && (
+            <div className="space-y-6 pb-16 animate-in fade-in">
+              <section className="bg-blue-600 rounded-[2.5rem] p-10 text-white relative shadow-lg"><HelpCircle className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-3xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '定期存款 101 入門課' : 'Fixed Deposit 101'}</h2><p className="text-blue-100 text-[12px] font-bold uppercase tracking-widest opacity-80">Everything you need to know.</p></section>
+              <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6"><div className="flex gap-3 min-w-max">{knowledgeContent.map(topic => (<button key={topic.id} onClick={() => document.getElementById(topic.id)?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"> {topic.label}</button>)) }</div></nav>
+              <div className="mt-8">{knowledgeContent.map(item => (<InfoCard key={item.id} id={item.id} icon={item.icon} title={item.title} scenario={item.scenario} points={item.points} description={item.desc} bgColor="bg-blue-600" accentColor="text-blue-600" t={t} isExpanded={expandedStrategies[item.id]} onToggle={() => setExpandedStrategies(prev => ({...prev, [item.id]: !prev[item.id]}))} isExpandable={true} fullContent={item.full} isMyth={item.isMyth} />))}</div>
+              <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
+            </div>
+          )}
+
+          {currentPage === 'strategies' && (
+            <div className="space-y-8 pb-16 animate-in fade-in">
+              <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-xl"><Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-4xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '賺息大師：專業獲利系統' : 'Yield Master Pro'}</h2><p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">Maximize your cash returns.</p></section>
+              <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6"><div className="flex gap-3 min-w-max">{strategiesContent.map(s => (<button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"> {t.stratLabels[s.key] || s.label}</button>)) }</div></nav>
+              <div className="mt-8">{strategiesContent.map((s, i) => (<InfoCard key={s.id} id={s.id} icon={s.icon} title={lang === 'zh_TW' ? t.stratLabels[s.key] : s.title} points={s.points} description={s.desc} isExpandable={true} fullContent={s.full} t={t} isExpanded={expandedStrategies[s.id]} onToggle={() => setExpandedStrategies(prev => ({...prev, [s.id]: !prev[s.id]}))} bgColor={i % 2 === 0 ? "bg-indigo-600" : "bg-emerald-600"} accentColor={i % 2 === 0 ? "text-indigo-600" : "text-emerald-600"} />))}</div>
+              <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
+            </div>
+          )}
+
+          {currentPage === 'glossary' && (
+            <div className="space-y-6 pb-16 animate-in fade-in">
+              <div className="bg-slate-100 rounded-[2.5rem] p-10 flex items-center justify-between shadow-inner"><h2 className="text-3xl font-black text-blue-800 tracking-tighter">{lang === 'zh_TW' ? '金融詞彙百科' : 'Financial Glossary'}</h2><GraduationCap size={64} className="text-slate-300 hidden md:block" /></div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {GLOSSARY_DATA.map((item, i) => (
+                  <article key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 transition-all group shadow-sm">
+                    <button onClick={() => setExpandedTerm(expandedTerm === i ? null : i)} className="w-full text-left focus:outline-none">
+                      <div className="flex items-center justify-between mb-2"><h3 className="font-black text-blue-600 text-[16px]">{lang === 'zh_TW' ? item.term_zh : item.term_en}</h3>{expandedTerm === i ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</div>
+                      <p className="text-[13px] text-slate-500 font-bold leading-relaxed">{lang === 'zh_TW' ? item.zh_desc : item.en_desc}</p>
+                      {expandedTerm === i && <div className="mt-4 pt-4 border-t border-slate-50 animate-in slide-in-from-top-1"><p className="text-[10px] font-black text-slate-400 mb-2 uppercase">{t.exampleLabel}</p><p className="text-[13px] text-slate-600 font-medium bg-slate-50 p-4 rounded-2xl leading-relaxed">{lang === 'zh_TW' ? item.zh_ex : item.en_ex}</p></div>}
+                    </button>
+                  </article>
+                ))}
+              </div>
+              <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
+            </div>
+          )}
+
+          {/* Bottom Ad Slot */}
+          <AdSensePlaceholder type="bottom" className="w-full h-24 sm:h-32 mt-8 mb-4" />
+
+          <footer className="mt-4 p-10 bg-white rounded-[2.5rem] border border-slate-200 text-slate-500 text-[12px]">
+              <div className="space-y-6">
+                  <div className="flex items-center gap-4 text-slate-900 font-black uppercase text-base"><AlertCircle size={24} className="text-blue-600" /> {t.disclaimerTitle}</div>
+                  <p className="border-l-4 border-slate-50 pl-6 leading-relaxed">{t.disclaimerText}</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-6 pt-4 text-slate-400 font-bold">
+                      <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-500" /> {t.manualRetrieved}本站利率數據由人工收集。The rate data on this site is collected manually.</span>
+                      <div className="flex items-center gap-2"><Mail size={16} className="text-blue-500" /> {t.inquiryEmail}: hongkongrates@gmail.com</div>
+                  </div>
+              </div>
+              <div className="pt-8 mt-8 border-t flex flex-col gap-4">
+                  <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{t.usefulLinks}</p>
+                  <div className="flex flex-wrap gap-4 items-center">
+                      <a href="https://www.ifec.org.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> IFEC 投委會</a>
+                      <a href="https://www.hkma.gov.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> HKMA 金管局</a>
+                      <a href="https://www.dps.org.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> DPS 存保會</a>
+                  </div>
+                  <div className="flex items-center text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                      <span className="ml-auto">Update: {LAST_UPDATED_DATE}</span>
+                  </div>
+              </div>
+          </footer>
         </div>
 
-        {currentPage === 'dashboard' && dashboardView}
-        
-        {currentPage === 'reminder' && (
-          <div className="space-y-6 pb-16 animate-in fade-in">
-            <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-lg"><BellRing className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-3xl font-black mb-2 tracking-tighter">{t.nav.reminder}</h2><p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">{t.seoDesc.reminder}</p></section>
-            <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm space-y-8">
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindBankLabel}</label><input list="banks" placeholder={t.remindPlaceholder} value={remindBank} onChange={e => setRemindBank(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /><datalist id="banks">{reminderBankList.map(name => <option key={name} value={name} />)}</datalist></div>
-                <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindAmtLabel}</label><input type="number" value={remindAmt} onChange={e => setRemindAmt(Number(e.target.value))} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindRateLabel}</label><input type="number" step="0.01" value={remindRate} onChange={e => setRemindRate(Number(e.target.value))} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                <div className="space-y-2"><label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{t.remindDateLabel}</label><input type="date" value={remindDate} onChange={e => setRemindDate(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl border-none font-black outline-none focus:ring-2 focus:ring-blue-500" /></div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <a href={`https://www.google.com/calendar/render?action=TEMPLATE&text=💰+${t.nav.reminder}：${remindBank || 'Bank'}&details=${t.remindAmtLabel}：HK$${remindAmt.toLocaleString()}%0A${t.remindRateLabel}：${remindRate}%25&dates=${remindDate ? new Date(remindDate).toISOString().replace(/-|:|\\.\\d\\d\\d/g, "") : ""}/${remindDate ? new Date(remindDate).toISOString().replace(/-|:|\\.\\d\\d\\d/g, "") : ""}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white p-5 rounded-3xl font-black text-sm shadow-lg hover:bg-blue-700 transition-all"><CalendarPlus size={20} /> {t.calendarBtn}</a>
-                <button onClick={() => alert('Push Alert Set')} className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-white p-5 rounded-3xl font-black text-sm shadow-lg hover:bg-slate-800 transition-all"><BellRing size={20} /> {t.pushBtn}</button>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {currentPage === 'knowledge' && (
-          <div className="space-y-6 pb-16 animate-in fade-in">
-            <section className="bg-blue-600 rounded-[2.5rem] p-10 text-white relative shadow-lg"><HelpCircle className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-3xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '定期存款 101 入門課' : 'Fixed Deposit 101'}</h2><p className="text-blue-100 text-[12px] font-bold uppercase tracking-widest opacity-80">Everything you need to know.</p></section>
-            <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6"><div className="flex gap-3 min-w-max">{knowledgeContent.map(topic => (<button key={topic.id} onClick={() => document.getElementById(topic.id)?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"> {topic.label}</button>)) }</div></nav>
-            <div className="mt-8">{knowledgeContent.map(item => (<InfoCard key={item.id} id={item.id} icon={item.icon} title={item.title} scenario={item.scenario} points={item.points} description={item.desc} bgColor="bg-blue-600" accentColor="text-blue-600" t={t} isExpanded={expandedStrategies[item.id]} onToggle={() => setExpandedStrategies(prev => ({...prev, [item.id]: !prev[item.id]}))} isExpandable={true} fullContent={item.full} isMyth={item.isMyth} />))}</div>
-            <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
-          </div>
-        )}
-
-        {currentPage === 'strategies' && (
-          <div className="space-y-8 pb-16 animate-in fade-in">
-            <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative shadow-xl"><Zap className="absolute top-0 right-0 p-10 opacity-10 rotate-12 w-48 h-48" /><h2 className="text-4xl font-black mb-2 tracking-tighter">{lang === 'zh_TW' ? '賺息大師：專業獲利系統' : 'Yield Master Pro'}</h2><p className="text-slate-400 text-[12px] font-bold uppercase tracking-widest opacity-80">Maximize your cash returns.</p></section>
-            <nav className="sticky top-14 z-40 px-6 py-4 bg-[#FDFDFF]/90 backdrop-blur-md border-b border-slate-100 overflow-x-auto no-scrollbar -mx-6"><div className="flex gap-3 min-w-max">{strategiesContent.map(s => (<button key={s.id} onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' })} className="px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-black uppercase hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"> {t.stratLabels[s.key] || s.label}</button>)) }</div></nav>
-            <div className="mt-8">{strategiesContent.map((s, i) => (<InfoCard key={s.id} id={s.id} icon={s.icon} title={lang === 'zh_TW' ? t.stratLabels[s.key] : s.title} points={s.points} description={s.desc} isExpandable={true} fullContent={s.full} t={t} isExpanded={expandedStrategies[s.id]} onToggle={() => setExpandedStrategies(prev => ({...prev, [s.id]: !prev[s.id]}))} bgColor={i % 2 === 0 ? "bg-indigo-600" : "bg-emerald-600"} accentColor={i % 2 === 0 ? "text-indigo-600" : "text-emerald-600"} />))}</div>
-            <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
-          </div>
-        )}
-
-        {currentPage === 'glossary' && (
-          <div className="space-y-6 pb-16 animate-in fade-in">
-            <div className="bg-slate-100 rounded-[2.5rem] p-10 flex items-center justify-between shadow-inner"><h2 className="text-3xl font-black text-blue-800 tracking-tighter">{lang === 'zh_TW' ? '金融詞彙百科' : 'Financial Glossary'}</h2><GraduationCap size={64} className="text-slate-300 hidden md:block" /></div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {GLOSSARY_DATA.map((item, i) => (
-                <article key={item.id} className="bg-white border border-slate-200 p-6 rounded-3xl hover:border-blue-400 transition-all group shadow-sm">
-                  <button onClick={() => setExpandedTerm(expandedTerm === i ? null : i)} className="w-full text-left focus:outline-none">
-                    <div className="flex items-center justify-between mb-2"><h3 className="font-black text-blue-600 text-[16px]">{lang === 'zh_TW' ? item.term_zh : item.term_en}</h3>{expandedTerm === i ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</div>
-                    <p className="text-[13px] text-slate-500 font-bold leading-relaxed">{lang === 'zh_TW' ? item.zh_desc : item.en_desc}</p>
-                    {expandedTerm === i && <div className="mt-4 pt-4 border-t border-slate-50 animate-in slide-in-from-top-1"><p className="text-[10px] font-black text-slate-400 mb-2 uppercase">{t.exampleLabel}</p><p className="text-[13px] text-slate-600 font-medium bg-slate-50 p-4 rounded-2xl leading-relaxed">{lang === 'zh_TW' ? item.zh_ex : item.en_ex}</p></div>}
-                  </button>
-                </article>
-              ))}
+        {/* Right-Side Ad Column (Desktop Only) */}
+        <aside className="hidden lg:block w-[300px] shrink-0">
+          <div className="sticky top-24 space-y-6">
+            <AdSensePlaceholder type="sidebar" className="w-full h-[600px]" />
+            
+            {/* Optional support/promo box to fill space */}
+            <div className="p-6 bg-slate-900 rounded-3xl text-white">
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Pro Tip</p>
+              <p className="text-[13px] font-bold leading-relaxed opacity-90">
+                Check our "Yield Master" section for advanced laddering strategies to protect your savings up to HK$2.4M.
+              </p>
             </div>
-            <button onClick={() => setCurrentPage('dashboard')} className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-[14px] hover:bg-slate-800 transition-all">{t.backToDash}</button>
           </div>
-        )}
+        </aside>
 
-        <footer className="mt-12 p-10 bg-white rounded-[2.5rem] border border-slate-200 text-slate-500 text-[12px]">
-            <div className="space-y-6">
-                <div className="flex items-center gap-4 text-slate-900 font-black uppercase text-base"><AlertCircle size={24} className="text-blue-600" /> {t.disclaimerTitle}</div>
-                <p className="border-l-4 border-slate-50 pl-6 leading-relaxed">{t.disclaimerText}</p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-6 pt-4 text-slate-400 font-bold">
-                    <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-500" /> {t.manualRetrieved}本站利率數據由人工收集。The rate data on this site is collected manually.</span>
-                    <div className="flex items-center gap-2"><Mail size={16} className="text-blue-500" /> {t.inquiryEmail}: hongkongrates@gmail.com</div>
-                </div>
-            </div>
-            <div className="pt-8 mt-8 border-t flex flex-col gap-4">
-                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{t.usefulLinks}</p>
-                <div className="flex flex-wrap gap-4 items-center">
-                    <a href="https://www.ifec.org.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> IFEC 投委會</a>
-                    <a href="https://www.hkma.gov.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> HKMA 金管局</a>
-                    <a href="https://www.dps.org.hk/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-slate-50 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-xl transition-all text-[11px] font-black"><ExternalLink size={12}/> DPS 存保會</a>
-                </div>
-                <div className="flex items-center text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
-                    <span className="ml-auto">Update: {LAST_UPDATED_DATE}</span>
-                </div>
-            </div>
-        </footer>
       </main>
     </div>
   );
