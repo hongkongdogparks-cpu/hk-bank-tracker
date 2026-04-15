@@ -10,17 +10,7 @@ import {
 } from 'lucide-react';
 
 // --- Global Date Constants ---
-const getDisplayDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() - 1); 
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d} ${hh}:${mm}`;
-};
-const LAST_UPDATED_DATE = getDisplayDate(); 
+const LAST_UPDATED_DATE = "2026-04-15 10:00";
 
 // --- Glossary Data ---
 const GLOSSARY_DATA = [
@@ -208,9 +198,10 @@ const GLOSSARY_DATA = [
 
 const T = {
   zh_TW: {
-    nav: { dashboard: '利率看板', knowledge: '新手教室', strategies: '賺息大師', reminder: '到期提醒', glossary: '詞彙百科' },
-    title: '港元定存比較',
-    subtitle: '專業級手動監控版',
+    nav: { dashboard: '利率看板', knowledge: '新手教室', strategies: '賺息大師', ladder: '階梯建議', reminder: '到期提醒', glossary: '詞彙百科' },
+    title: '銀行定期存款比較（港元）',
+    subtitle: '專業級監控版（手動更新）',
+    amountLabel: '預計存款金額',
     all: '全部', trad: '傳統銀行', virt: '虛擬銀行',
     searchPlace: '搜尋銀行、代號或帳戶等級…',
     sortRate: '按利率', sortCode: '按編號', sortName: '按名稱',
@@ -242,6 +233,7 @@ const T = {
         dashboard: '全港最齊港元定期存款利率比較，涵蓋滙豐、中銀、眾安等最新高息優惠。',
         knowledge: '定期存款入門教室：教你識別匯率陷阱、新資金定義與存保保障。',
         strategies: '賺息大師進階策略：階梯式定存、利差套利術與資金冷卻期全攻略。',
+        ladder: '專業級存款保障階梯建議，自動分散銀行以極大化 HK$800,000 存款保障。',
         reminder: '定存到期提醒工具：一鍵加入日曆，絕不錯過搬錢高息時機。',
         glossary: '金融理財詞彙百科：專業解釋年利率、複利、存保計劃。'
     },
@@ -252,9 +244,10 @@ const T = {
     }
   },
   en: {
-    nav: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Yield Master', reminder: 'Reminders', glossary: 'Glossary' },
-    title: 'HKD FD Rate Tracker',
+    nav: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Yield Master', ladder: 'Ladder Pro', reminder: 'Reminders', glossary: 'Glossary' },
+    title: 'Hong Kong Banks Fixed Deposit Rates Tracker',
     subtitle: 'Pro Manual Version',
+    amountLabel: 'Expected Fund Amount',
     all: 'All', trad: 'Trad', virt: 'Virt',
     searchPlace: 'Search...',
     sortRate: 'By Rate', sortCode: 'By Code', sortName: 'By Name',
@@ -282,7 +275,7 @@ const T = {
     shareTitle: 'Share Tool', copyLink: 'Copy', copySuccess: 'Copied',
     shareMsg: 'Best HKD FD Rates - Find the highest yields!',
     usefulLinks: 'Useful Links', inquiryEmail: 'Inquiry',
-    seoDesc: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Master', reminder: 'Reminders', glossary: 'Glossary' },
+    seoDesc: { dashboard: 'Rates', knowledge: 'Classroom', strategies: 'Master', ladder: 'Professional DPS laddering suggestions to maximize HK$800k protection.', reminder: 'Reminders', glossary: 'Glossary' },
     stratLabels: {
         hopper: 'Hopper', arbitrage: 'Arbitrage', sprint: 'Sprint',
         tasks: 'Tasks', pooling: 'Pooling', reinvest: 'Reinvest',
@@ -294,7 +287,7 @@ const T = {
 // --- Initial Bank Data ---
 const INITIAL_BANKS = [
   { id: 'airstar', rates: { HKD: { '1m': 1.4, '3m': 2.1, '6m': 2.4, '12m': 2.7 } }, name: { zh: '天星', en: 'Airstar Bank' }, stockCode: 'VB01', domain: 'www.airstarbank.com', url: 'https://www.airstarbank.com/zh-hk/deposit.html', minDeposit: 1, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-blue-500', cs: '37181818' },
-  { id: 'ant_retail', rates: { HKD: { '1m': 1.5, '3m': 1.8, '6m': 2.2, '12m': 2.5 } }, name: { zh: '螞蟻', en: 'Ant Bank' }, stockCode: 'VB02', domain: 'www.antbank.hk', url: 'https://www.antbank.hk/rates', minDeposit: 1, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-blue-950', cs: '23211888' },
+  { id: 'ant_retail', rates: { HKD: { '1m': 1.5, '3m': 1.8, '6m': 2.2, '12m': 2.5 } }, name: { zh: '螞蟻', en: 'Ant Bank' }, stockCode: 'VB02', domain: 'www.antbank.hk', url: 'https://www.antbank.hk/rates', minDeposit: 1, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-blue-950', cs: '23211888', logoUrl: 'https://media.licdn.com/dms/image/v2/D560BAQFuCuZIDzLebQ/company-logo_200_200/B56ZsSnJcDJoAM-/0/1765543811310/antbankhk_logo?e=2147483647&v=beta&t=NX1JOJJ2Q9wCBxBObqbBW5GZtXWDkfP67bhY9EPXZtk', },
   { id: 'bocom_hk_pref', rates: { HKD: { '1m': 2.5, '3m': 2.75, '6m': 2.75, '12m': 3.00 } }, name: { zh: '交通', en: 'Bank of Comm' }, stockCode: '3328', domain: 'www.hk.bankcomm.com', url: 'https://www.hk.bankcomm.com/hk/shtml/hk/en/2005742/2005763/2005764/list.shtml', minDeposit: 500000, type: 'trad', fundType: 'new', channel: 'web', color: 'bg-blue-800', cs: '22395559' },
   { id: 'bea_supremegold', rates: { HKD: { '1m': 1.5, '3m': 2.0, '6m': 2.2, '12m': 2.3 } }, name: { zh: '東亞 顯卓理財', en: 'BEA SupremeGold' }, stockCode: '0023', domain: 'www.hkbea.com', url: 'https://www.hkbea.com/html/zh/bea-personal-banking-supremegold-time-deposit.html', minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'any', color: 'bg-amber-600', cs: '22111333' },
   { id: 'bea_supreme', rates: { HKD: { '1m': 1.4, '3m': 1.95, '6m': 2.15, '12m': 2.25 } }, name: { zh: '東亞 至尊理財', en: 'BEA Supreme' }, stockCode: '0023', domain: 'www.hkbea.com', url: 'https://www.hkbea.com', minDeposit: 10000, type: 'trad', fundType: 'old', channel: 'any', color: 'bg-amber-500', cs: '22111333' },
@@ -312,9 +305,9 @@ const INITIAL_BANKS = [
   { id: 'hsbc_premier_elite', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': null } }, name: { zh: '滙豐 卓越尊尚', en: 'HSBC Premier Elite' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'app', color: 'bg-rose-600', cs: '22333322' },
   { id: 'hsbc_elite', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': null } }, name: { zh: '滙豐 卓越', en: 'HSBC Premier' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk/zh-hk/accounts/offers/deposits/', minDeposit: 10000, type: 'trad', fundType: 'new', channel: 'app', color: 'bg-rose-600', cs: '22333322' },
   { id: 'hsbc_one', rates: { HKD: { '1m': null, '3m': 2.2, '6m': 2.0, '12m': null } }, name: { zh: '滙豐 One', en: 'HSBC One' }, stockCode: '0005', domain: 'www.hsbc.com.hk', url: 'https://www.hsbc.com.hk', minDeposit: 10000, type: 'trad', fundType: 'old', channel: 'any', color: 'bg-rose-400', cs: '22333000' },
-  { id: 'icbc_3m', rates: { HKD: { '1m': 1.6, '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, name: { zh: '工銀 300萬+', en: 'ICBC 3M+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 3000000, type: 'trad', fundType: 'old', channel: 'app/mob', color: 'bg-red-950', cs: '21895588' },
-  { id: 'icbc_80k', rates: { HKD: { '1m': 1.5, '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, name: { zh: '工銀 80萬+', en: 'ICBC 80K+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 800000, type: 'trad', fundType: 'old', channel: 'app/mob', color: 'bg-red-900', cs: '21895588' },
-  { id: 'icbc_50k', rates: { HKD: { '1m': 1.4, '3m': 2.10, '6m': 2.10, '12m': 2.10 } }, name: { zh: '工銀 50萬+', en: 'ICBC 50K+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 50000, type: 'trad', fundType: 'old', channel: 'app/mob', color: 'bg-red-800', cs: '21895588' },
+  { id: 'icbc_3m', rates: { HKD: { '1m': 1.6, '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, name: { zh: '工銀 300萬+', en: 'ICBC 3M+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 3000000, type: 'trad', fundType: 'old', channel: ['app', 'web'], color: 'bg-red-950', cs: '21895588' },
+  { id: 'icbc_80k', rates: { HKD: { '1m': 1.5, '3m': 2.25, '6m': 2.25, '12m': 2.25 } }, name: { zh: '工銀 80萬+', en: 'ICBC 80K+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 800000, type: 'trad', fundType: 'old', channel: ['app', 'web'], color: 'bg-red-900', cs: '21895588' },
+  { id: 'icbc_50k', rates: { HKD: { '1m': 1.4, '3m': 2.10, '6m': 2.10, '12m': 2.10 } }, name: { zh: '工銀 50萬+', en: 'ICBC 50K+' }, stockCode: '1398', domain: 'www.icbcasia.com', url: 'https://www.icbcasia.com', minDeposit: 50000, type: 'trad', fundType: 'old', channel: ['app', 'web'], color: 'bg-red-800', cs: '21895588' },
   { id: 'livi_50k', rates: { HKD: { '1m': 1.2, '3m': 2.0, '6m': 2.0, '12m': 2.0 } }, name: { zh: '理慧 (5萬+)', en: 'Livi (50k+)' }, stockCode: 'VB03', domain: 'www.livibank.com', url: 'https://www.livibank.com/zh_HK/features/livisave.html', minDeposit: 50000, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-blue-600', cs: '29833338' },
   { id: 'livi_500', rates: { HKD: { '1m': 0.5, '3m': 1.10, '6m': 1.3, '12m': 1.6 } }, name: { zh: '理慧 (500+)', en: 'Livi (500+)' }, stockCode: 'VB03', domain: 'www.livibank.com', url: 'https://www.livibank.com/zh_HK/features/livisave.html', minDeposit: 500, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-blue-400', cs: '29833338' },
   { id: 'mox_all', rates: { HKD: { '1m': null, '3m': 2.1, '6m': 2.2, '12m': 2.3 } }, name: { zh: 'Mox Bank', en: 'Mox Bank' }, stockCode: 'VB04', domain: 'www.mox.com', url: 'https://mox.com/zh/save/time-deposit/', minDeposit: 1, type: 'virt', fundType: 'new', channel: 'app', color: 'bg-black', cs: '28088818' },
@@ -328,12 +321,15 @@ const INITIAL_BANKS = [
 ];
 
 // --- Static Components ---
-const BankLogo = ({ domain, id }) => (
+const BankLogo = ({ domain, logoUrl }) => (
   <img 
-    src={`https://www.google.com/s2/favicons?sz=64&domain=${domain}`} 
-    className="w-8 h-8 rounded-lg border shadow-sm bg-white p-0.5 shrink-0" 
+    // Use logoUrl if provided, otherwise fallback to Google's favicon service
+    src={logoUrl || `https://www.google.com/s2/favicons?sz=64&domain=${domain}`} 
+    className="w-8 h-8 rounded-lg border shadow-sm bg-white p-0.5 shrink-0 object-contain" 
     alt="Logo" 
-    onError={(e) => { e.target.src = "https://www.google.com/s2/favicons?sz=64&domain=hkma.gov.hk"; }}
+    onError={(e) => { 
+      e.target.src = "https://www.google.com/s2/favicons?sz=64&domain=hkma.gov.hk"; 
+    }}
   />
 );
 
@@ -409,6 +405,28 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+  // Generate FAQ Schema based on your Glossary or Knowledge content
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": GLOSSARY_DATA.slice(0, 5).map(item => ({
+      "@type": "Question",
+      "name": lang === 'zh_TW' ? item.term_zh : item.term_en,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": lang === 'zh_TW' ? item.zh_desc : item.en_desc
+      }
+    }))
+  };
+
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.innerHTML = JSON.stringify(faqSchema);
+  document.head.appendChild(script);
+  return () => document.head.removeChild(script);
+}, [lang]);
+
   const formattedTime = useMemo(() => {
     return currentTime.toLocaleString(lang === 'zh_TW' ? 'zh-HK' : 'en-HK', {
         year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', weekday: 'long', hour12: false
@@ -462,20 +480,34 @@ export default function App() {
         if (!name.toLowerCase().includes(q) && !bank.stockCode.toLowerCase().includes(q)) return;
         if (filterType !== 'all' && bank.type !== filterType) return;
         if (fundFilter !== 'all' && bank.fundType !== fundFilter) return;
-        if (channelFilter !== 'all' && bank.channel !== channelFilter && bank.channel !== 'any' && !(bank.channel === 'app/mob' && channelFilter === 'app')) return;
+        
+        if (channelFilter !== 'all') {
+            const channels = Array.isArray(bank.channel) ? bank.channel : [bank.channel];
+            const hasMatch = channels.some(ch => 
+                ch === channelFilter || ch === 'any' || 
+                (ch === 'app/mob' && channelFilter === 'app') ||
+                (ch === 'app' && channelFilter === 'app/mob')
+            );
+            if (!hasMatch) return;
+        }
 
         if (tenor === 'all') {
-            Object.entries(bank.rates.HKD).forEach(([tnr, rate]) => { if (rate !== null) rows.push({ ...bank, currentTenor: tnr, currentRate: rate }); });
+            Object.entries(bank.rates.HKD).forEach(([tnr, rate]) => { 
+                if (rate !== null) rows.push({ ...bank, currentTenor: tnr, currentRate: rate }); 
+            });
         } else {
-            const r = bank.rates.HKD[tenor]; if (r !== null) rows.push({ ...bank, currentTenor: tenor, currentRate: r });
+            const r = bank.rates.HKD[tenor]; 
+            if (r !== null) rows.push({ ...bank, currentTenor: tenor, currentRate: r });
         }
     });
+
     return rows.sort((a, b) => {
         if (sortBy === 'rate') return b.currentRate - a.currentRate;
         if (sortBy === 'code') return a.stockCode.localeCompare(b.stockCode);
         return (lang === 'zh_TW' ? a.name.zh : a.name.en).localeCompare(lang === 'zh_TW' ? b.name.zh : b.name.en);
     });
   }, [tenor, searchQuery, filterType, fundFilter, channelFilter, sortBy, lang]);
+
 
   const calcReturn = (rate, amt = amount, tnr) => {
     if (!rate || !amt) return 0;
@@ -632,42 +664,246 @@ export default function App() {
     }
 ];
 
-  // --- Views ---
-  const dashboardView = (
-    <div className="space-y-4 animate-in fade-in">
-      <section className="bg-blue-600 rounded-[2rem] p-6 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12"><Landmark size={120}/></div>
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center justify-between"><h2 className="text-xl font-black tracking-tight">{t.splitterTitle}</h2><div className="flex items-center gap-2">{excludedBankIds.size > 0 && (<button onClick={() => setExcludedBankIds(new Set())} className="bg-white/10 hover:bg-white/30 px-3 py-1.5 rounded-lg text-[9px] font-black border border-white/20"><RefreshCcw size={10} className="inline mr-1"/> {t.resetLadder}</button>)}<span className="bg-white/20 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">{t.dpsWarning}</span></div></div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {['1m', '3m', '6m', '12m'].map(tn => {
-              const b = ladderSuggestion[tn]; if (!b) return null;
-              const name = lang === 'zh_TW' ? b.name.zh : b.name.en;
-              return (
-                <div key={tn} className="group/card bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 relative">
-                  <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-all cursor-pointer" onClick={() => setExcludedBankIds(prev => { const n = new Set(prev); n.add(b.id); return n; })}><X size={14} /></div>
-                  <p className="text-[8px] font-black text-blue-200 uppercase mb-1">{tn.toUpperCase()} {t.bestReturn}</p>
-                  <div className="flex items-center gap-2 mb-1"><BankLogo domain={b.domain} id={b.id} /><span className="font-black text-[11px] truncate">{name}</span></div>
-                  <p className="text-xl font-black">{b.rates.HKD[tn]}%</p>
-                </div>
-              );
-            })}
+const ladderView = (
+  <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    
+    {/* --- 1. PRO HEADER SECTION --- */}
+    <header className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2.5rem] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-12 opacity-10 rotate-12">
+        <ShieldCheck size={180} />
+      </div>
+      <div className="relative z-10">
+        <div className="inline-flex items-center gap-2 bg-white/20 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 backdrop-blur-md border border-white/10">
+          <Zap size={12} className="fill-current" /> {t.dpsWarning}
+        </div>
+        <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tighter leading-tight">
+          {t.splitterTitle}
+        </h2>
+        <p className="text-blue-100 text-sm md:text-base font-medium max-w-2xl opacity-90 leading-relaxed">
+          {t.splitterDesc}
+        </p>
+      </div>
+    </header>
+
+    {/* --- 2. PREMIUM AMOUNT INPUT --- */}
+    <section className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-xl shadow-blue-900/5 group transition-all hover:border-blue-300">
+      <div className="flex flex-col md:flex-row md:items-center gap-6">
+        <div className="bg-blue-50 p-4 rounded-3xl text-blue-600 group-hover:scale-110 transition-transform duration-300">
+          <Wallet size={28} />
+        </div>
+        <div className="flex-1">
+          <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 mb-2 block">
+            {t.amountLabel}
+          </label>
+          <div className="flex items-center border-b-4 border-slate-100 focus-within:border-blue-500 pb-2 transition-all">
+            <span className="text-2xl font-black text-slate-300 mr-3">HK$</span>
+            <input 
+              type="number" 
+              value={amount} 
+              onChange={e => setAmount(Number(e.target.value))} 
+              className="w-full bg-transparent text-4xl md:text-5xl font-black outline-none tracking-tighter" 
+            />
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section className="bg-white rounded-[2rem] border border-slate-200 p-6 flex flex-col gap-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="bg-blue-50 p-3 rounded-2xl text-blue-600"><Wallet size={20}/></div>
-          <div className="flex-1 flex items-center border-b-2 border-slate-100 focus-within:border-blue-500 pb-1 transition-all"><span className="text-xl font-black text-slate-300 mr-2">HK$</span><input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="w-full bg-transparent text-3xl font-black outline-none" /></div>
+    {/* --- 3. THE BANK LADDER GRID --- */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  {['1m', '3m', '6m', '12m'].map(tn => {
+    const b = ladderSuggestion[tn]; 
+    if (!b) return null;
+    const name = lang === 'zh_TW' ? b.name.zh : b.name.en;
+    const potentialReturn = calcReturn(b.rates.HKD[tn], amount / 4, tn);
+
+    return (
+      <div key={tn} className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm relative group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <button 
+          onClick={() => setExcludedBankIds(prev => { const n = new Set(prev); n.add(b.id); return n; })}
+          className="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors p-1"
+        >
+          <X size={18} />
+        </button>
+        
+        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-5">{tn.toUpperCase()} {t.interestLabel}</p>
+        
+        <div className="flex items-center gap-3 mb-6">
+          <BankLogo domain={b.domain} logoUrl={b.logoUrl} />
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-black text-[13px] text-slate-800 truncate max-w-[110px]">
+                {name}
+              </h3>
+              {/* FIXED: Removed the incorrect 'row' reference and replaced with 'tn' */}
+              <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-sm whitespace-nowrap">
+                {tn.toUpperCase()}
+              </span>
+            </div>
+            
+            <div className="flex gap-1 mt-1">
+               {Array.isArray(b.channel) ? <RestrictionTag type="channel" value={b.channel[0]} t={t} /> : <RestrictionTag type="channel" value={b.channel} t={t} />}
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div><label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">{t.tenorLabel}</label><div className="flex bg-slate-50 p-1 rounded-xl gap-1">{Object.keys(t.tenorOptions).map(m => (<button key={m} onClick={() => setTenor(m)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black ${tenor === m ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400'}`}>{t.tenorOptions[m]}</button>))}</div></div>
-          <div><label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">{t.fundAll}</label><div className="flex bg-slate-50 p-1 rounded-xl gap-1">{Object.keys(t.fundOptions).map(v => (<button key={v} onClick={() => setFundFilter(v)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black ${fundFilter === v ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-400'}`}>{t.fundOptions[v]}</button>))}</div></div>
-          <div><label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">{t.channelAll}</label><div className="flex bg-slate-50 p-1 rounded-xl gap-1">{Object.keys(t.channelOptions).map(v => (<button key={v} onClick={() => setChannelFilter(v)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black ${channelFilter === v ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-400'}`}>{t.channelOptions[v]}</button>))}</div></div>
-          <div><label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-1 block">{t.bankTypeLabel}</label><div className="flex bg-slate-50 p-1 rounded-xl gap-1">{[['all', t.all], ['trad', t.trad], ['virt', t.virt]].map(([v, l]) => (<button key={v} onClick={() => setFilterType(v)} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black ${filterType === v ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'}`}>{l}</button>))}</div></div>
+
+        <div className="space-y-1">
+          <p className="text-3xl font-black text-slate-900">{b.rates.HKD[tn]}%</p>
+          <p className="text-emerald-500 font-bold text-sm">+{potentialReturn.toLocaleString()}</p>
         </div>
-      </section>
+      </div>
+    );
+  })}
+</div>
+
+    {/* --- 4. EXPLANATION BOX --- */}
+    <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
+      <div className="flex items-center gap-3 mb-4 text-slate-800">
+        <div className="bg-white p-2 rounded-xl shadow-sm"><ShieldCheck size={20} className="text-blue-600"/></div>
+        <h3 className="font-black uppercase tracking-wider text-sm">{lang === 'zh_TW' ? '運作原理解析' : 'How it Works'}</h3>
+      </div>
+      <p className="text-sm leading-loose font-medium text-slate-600">
+        {lang === 'zh_TW' 
+          ? '本系統採用「分散銀行策略」，確保每筆存款均低於 HK$800,000 的法定保障上限。透過組合不同存期的銀行，我們能為您在維持高流動性的同時，鎖定市場最優利率。'
+          : 'Our system utilizes a "Bank Diversification Strategy," ensuring every deposit remains below the HK$800,000 statutory limit. By staggering tenors, we maintain high liquidity while securing the market\'s top rates.'
+        }
+      </p>
+    </div>
+
+    {/* --- 5. ACTION BUTTONS --- */}
+    <div className="flex flex-col sm:flex-row gap-4">
+      <button 
+        onClick={() => setCurrentPage('dashboard')} 
+        className="flex-1 py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-sm hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2"
+      >
+        <TrendingUp size={18}/> {t.backToDash}
+      </button>
+      {excludedBankIds.size > 0 && (
+        <button 
+          onClick={() => setExcludedBankIds(new Set())} 
+          className="px-8 py-5 bg-white border border-slate-200 text-slate-600 rounded-3xl font-black uppercase text-sm hover:bg-slate-50 transition-all"
+        >
+          {t.resetLadder}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+
+  // --- Views ---
+const dashboardView = (
+  <div className="space-y-4 animate-in fade-in">
+         <section className="bg-white rounded-[2rem] border border-slate-200 p-6 flex flex-col gap-6 shadow-sm">
+  <div className="flex flex-col gap-2">
+    {/* Explicit Label Added Here */}
+    <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">
+      {t.amountLabel}
+    </label>
+    
+    <div className="flex items-center gap-4">
+      <div className="bg-blue-50 p-3 rounded-2xl text-blue-600">
+        <Wallet size={20}/>
+      </div>
+      <div className="flex-1 flex items-center border-b-2 border-slate-100 focus-within:border-blue-500 pb-1 transition-all">
+        <span className="text-xl font-black text-slate-300 mr-2">HK$</span>
+        <input 
+          type="number" 
+          value={amount} 
+          onChange={e => setAmount(Number(e.target.value))} 
+          className="w-full bg-transparent text-3xl font-black outline-none" 
+        />
+      </div>
+    </div>
+  </div>
+
+  {/* Filter Control Grid */}
+<section className="bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    
+    {/* 1. Tenor Filter */}
+    <div>
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">
+        {t.tenorLabel}
+      </label>
+      <div className="flex bg-slate-50 p-1 rounded-xl gap-1">
+        {Object.keys(t.tenorOptions).map(m => (
+          <button 
+            key={m} 
+            onClick={() => setTenor(m)} 
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${tenor === m ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {t.tenorOptions[m]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* 2. Funds Filter */}
+    <div>
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">
+        {t.fundAll}
+      </label>
+      <div className="flex bg-slate-50 p-1 rounded-xl gap-1">
+        {Object.keys(t.fundOptions).map(v => (
+          <button 
+            key={v} 
+            onClick={() => setFundFilter(v)} 
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${fundFilter === v ? 'bg-orange-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {t.fundOptions[v]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* 3. Channel Filter */}
+    <div>
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">
+        {t.channelAll}
+      </label>
+      <div className="flex bg-slate-50 p-1 rounded-xl gap-1">
+        {Object.keys(t.channelOptions).map(v => (
+          <button 
+            key={v} 
+            onClick={() => setChannelFilter(v)} 
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${channelFilter === v ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {t.channelOptions[v]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* 4. Bank Type Filter */}
+    <div>
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">
+        {t.bankTypeLabel}
+      </label>
+      <div className="flex bg-slate-50 p-1 rounded-xl gap-1">
+        {[
+          ['all', t.all], 
+          ['trad', t.trad], 
+          ['virt', t.virt]
+        ].map(([v, l]) => (
+          <button 
+            key={v} 
+            onClick={() => setFilterType(v)} 
+            className={`flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all ${filterType === v ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</section>
+  
+  {/* Rest of the filters (Tenor, Fund, Channel, Bank Type) remain below */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {/* ... filter buttons ... */}
+  </div>
+</section>
 
       <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[240px]"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} /><input type="text" placeholder={t.searchPlace} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl font-bold outline-none text-[12px] shadow-sm" /></div>
@@ -681,34 +917,69 @@ export default function App() {
 
       <div className="space-y-1.5">
         {displayRows.map((row, idx) => {
-          const r = row.currentRate; const belowMin = amount < row.minDeposit; const isSelected = compareIds.includes(row.id);
-          const name = lang === 'zh_TW' ? row.name.zh : row.name.en;
-          return (<article key={`${row.id}-${row.currentTenor}-${idx}`} className={`group bg-white rounded-xl border transition-all ${belowMin ? 'opacity-40 grayscale border-slate-50' : 'border-slate-200 hover:border-blue-300 shadow-sm'}`}>
-              <div className="p-2 px-4 flex flex-nowrap items-center gap-4">
-                <button disabled={belowMin} onClick={() => { if (isSelected) setCompareIds(compareIds.filter(id => id !== row.id)); else if (compareIds.length < 3) setCompareIds([...compareIds, row.id]); }} className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 bg-white'}`}>{isSelected && <Check size={10}/>}</button>
-                <div className={`w-1 h-8 rounded-full ${row.color} shrink-0`}></div>
-                <div className="flex items-center gap-3 min-w-[200px] flex-1">
-                  <BankLogo domain={row.domain} id={row.id} />
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                        <h3 className="font-black text-[13px] text-slate-800 truncate max-w-[110px]">{name}</h3>
-                        <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-sm whitespace-nowrap">{row.currentTenor.toUpperCase()}</span>
-                    </div>
-                    <div className="flex gap-1 items-center"><RestrictionTag type="fundType" value={row.fundType} t={t} /><RestrictionTag type="channel" value={row.channel} t={t} /></div>
-                  </div>
-                </div>
-                <div className="hidden md:block text-slate-300 font-bold text-[9px] w-12 text-center shrink-0">{row.stockCode}</div>
-                <div className="flex items-center gap-6 md:gap-10 shrink-0 ml-auto">
-                    <div className="w-16 text-right leading-tight"><p className="text-[15px] font-black text-slate-900">{r.toFixed(3)}%</p></div>
-                    <div className="w-24 text-right">{belowMin ? <span className="text-red-400 text-[9px] font-black uppercase leading-none block truncate"><AlertCircle size={9} className="inline mr-0.5"/> {t.lockedLabel}</span> : <p className="text-[14px] font-black text-emerald-500">+{calcReturn(r, amount, row.currentTenor).toLocaleString()}</p>}</div>
-                    <div className="flex gap-1">
-                        <a href={`tel:${row.cs}`} className="p-2 hover:bg-emerald-50 text-slate-300 hover:text-emerald-600 transition-colors"><Phone size={14} /></a>
-                        <a href={row.url} target="_blank" rel="noreferrer" className="p-2 hover:bg-blue-50 text-slate-300 hover:text-blue-600 transition-colors"><ArrowUpRight size={14} /></a>
-                    </div>
-                </div>
-              </div>
-          </article>);
-        })}
+  const r = row.currentRate; 
+  const belowMin = amount < row.minDeposit; 
+  const isSelected = compareIds.includes(row.id);
+  const name = lang === 'zh_TW' ? row.name.zh : row.name.en;
+
+  return (
+    <article key={`${row.id}-${row.currentTenor}-${idx}`} className={`group bg-white rounded-xl border transition-all ${belowMin ? 'opacity-40 grayscale border-slate-50' : 'border-slate-200 hover:border-blue-300 shadow-sm'}`}>
+      <div className="p-3 px-4 flex flex-nowrap items-center gap-4">
+        {/* Checkbox */}
+        <button disabled={belowMin} onClick={() => { if (isSelected) setCompareIds(compareIds.filter(id => id !== row.id)); else if (compareIds.length < 3) setCompareIds([...compareIds, row.id]); }} className={`w-4 h-4 rounded border flex items-center justify-center transition-all shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 bg-white'}`}>
+          {isSelected && <Check size={10}/>}
+        </button>
+
+        {/* Color Accent */}
+        <div className={`w-1 h-8 rounded-full ${row.color} shrink-0`}></div>
+
+        {/* Bank Identity Section */}
+        <div className="flex items-center gap-3 min-w-[200px] flex-1">
+          <BankLogo domain={row.domain} logoUrl={row.logoUrl} />
+          <div className="flex flex-col">
+            {/* Row 1: Name and Tenor */}
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-black text-[13px] text-slate-800 truncate max-w-[110px]">{name}</h3>
+              <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-sm whitespace-nowrap">
+                {row.currentTenor.toUpperCase()}
+              </span>
+            </div>
+            {/* Row 2: Stock Code */}
+            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">
+              {row.stockCode}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Rate and Returns */}
+        <div className="flex items-center gap-6 md:gap-10 shrink-0 ml-auto">
+          <div className="w-16 text-right leading-tight">
+            <p className="text-[15px] font-black text-slate-900">{r.toFixed(3)}%</p>
+          </div>
+          <div className="w-24 text-right">
+            {belowMin ? (
+              <span className="text-red-400 text-[9px] font-black uppercase leading-none block truncate">
+                <AlertCircle size={9} className="inline mr-0.5"/> {t.lockedLabel}
+              </span>
+            ) : (
+              <p className="text-[14px] font-black text-emerald-500">
+                +{calcReturn(r, amount, row.currentTenor).toLocaleString()}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-1">
+            <a href={`tel:${row.cs}`} className="p-2 hover:bg-emerald-50 text-slate-300 hover:text-emerald-600 transition-colors">
+              <Phone size={14} />
+            </a>
+            <a href={row.url} target="_blank" rel="noreferrer" className="p-2 hover:bg-blue-50 text-slate-300 hover:text-blue-600 transition-colors">
+              <ArrowUpRight size={14} />
+            </a>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+})}
       </div>
     </div>
   );
@@ -758,10 +1029,22 @@ export default function App() {
         {/* Left Content Area (Responsive) */}
         <div className="flex-1 min-w-0">
           <div className="lg:hidden flex overflow-x-auto gap-2 mb-6 pb-2 no-scrollbar font-black text-[10px] uppercase tracking-widest">
-              {Object.keys(t.nav).map(page => (<button key={page} onClick={() => setCurrentPage(page)} className={`whitespace-nowrap px-5 py-2.5 rounded-full border-2 ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}>{t.nav[page]}</button>))}
-          </div>
+  {Object.keys(t.nav).map(page => (
+    <button 
+      key={page} 
+      onClick={() => setCurrentPage(page)} 
+      className={`whitespace-nowrap px-5 py-2.5 rounded-full border-2 transition-all ${
+        currentPage === page 
+          ? 'bg-blue-600 border-blue-600 text-white' 
+          : 'bg-white border-slate-200 text-slate-400'
+      }`}
+    >
+      {t.nav[page]}
+    </button>
+  ))}
+</div>  
 
-          {currentPage === 'dashboard' && dashboardView}
+          {currentPage === 'dashboard' && dashboardView}{currentPage === 'ladder' && ladderView}
           
           {currentPage === 'reminder' && (
             <div className="space-y-6 pb-16 animate-in fade-in">
